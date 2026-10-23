@@ -1,0 +1,13 @@
+# build output
+/build/
+/dist/
+*.smx
+*.tar.gz
+*.zip
+*.sha256
+
+# editors / OS
+.idea/
+.vscode/
+*.swp
+.DS_Store
