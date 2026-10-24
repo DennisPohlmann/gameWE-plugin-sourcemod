@@ -51,5 +51,9 @@ version semantic-release will make (`feat` → minor, `fix` → patch,
    player who left.
 10. **The 20 points:** go through the `security-check` skill's list for the
    whole plugin, with extra attention on changes since the last tag.
-11. **Report:** go/no-go, findings with file:line and fix, the version semantic-release will make, then ask Dennis
+11. **Security and privacy audit:** run the `security-privacy-audit`
+   skill over the whole repository, all branches and tags since the last
+   release, the release commit messages and the `CHANGELOG.md` entry that
+   semantic-release will write. Any `BLOCKED` item is a no-go.
+12. **Report:** go/no-go, the `security-privacy-audit` summary, findings with file:line and fix, the version semantic-release will make, then ask Dennis
     for the go to push to `main`.
