@@ -15,7 +15,9 @@ server and works together with the
   (`gamewe_psay`, `gamewe_msay`, ...),
 - hides the stats chat commands (`!rank`, `!top10`, ...) from chat, but still
   logs them for the collector,
-- shows the gameWE menu (`!gamewe`), and optionally a damage summary on death,
+- shows the gameWE menu (`!gamewe`), a damage summary on death and the stats of
+  the spectated player; every player chooses these displays in the gameWE
+  settings menu, `gamewe.cfg` only sets the default,
 - gives other plugins access to the statistics through natives and forwards.
 
 It is the original gameME plugin 5.0.0, ported to current SourcePawn and

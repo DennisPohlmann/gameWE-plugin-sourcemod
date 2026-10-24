@@ -136,4 +136,36 @@
 	{
 		"pl"		"Pokaż mnie w rankingu"
 	}
+	"SettingsMenu_Damage"
+	{
+		"pl"		"Wyświetlanie obrażeń: {1}"
+	}
+	"SettingsMenu_Spectator"
+	{
+		"pl"		"Informacje dla widza: {1}"
+	}
+	"SettingsValue_Default"
+	{
+		"pl"		"domyślne serwera ({1})"
+	}
+	"SettingsValue_Off"
+	{
+		"pl"		"wył."
+	}
+	"SettingsValue_On"
+	{
+		"pl"		"wł."
+	}
+	"SettingsValue_Menu"
+	{
+		"pl"		"menu"
+	}
+	"SettingsValue_Chat"
+	{
+		"pl"		"czat"
+	}
+	"SettingsValue_Disabled"
+	{
+		"pl"		"wyłączone przez serwer"
+	}
 }

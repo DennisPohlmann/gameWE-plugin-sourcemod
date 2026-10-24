@@ -136,4 +136,36 @@
 	{
 		"ru"		"Показать меня в рейтинге"
 	}
+	"SettingsMenu_Damage"
+	{
+		"ru"		"Показ урона: {1}"
+	}
+	"SettingsMenu_Spectator"
+	{
+		"ru"		"Инфо для зрителя: {1}"
+	}
+	"SettingsValue_Default"
+	{
+		"ru"		"по умолчанию сервера ({1})"
+	}
+	"SettingsValue_Off"
+	{
+		"ru"		"выкл."
+	}
+	"SettingsValue_On"
+	{
+		"ru"		"вкл."
+	}
+	"SettingsValue_Menu"
+	{
+		"ru"		"меню"
+	}
+	"SettingsValue_Chat"
+	{
+		"ru"		"чат"
+	}
+	"SettingsValue_Disabled"
+	{
+		"ru"		"отключено сервером"
+	}
 }

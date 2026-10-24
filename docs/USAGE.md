@@ -34,8 +34,24 @@ menu entry "Settings" (also `!gamewe_settings`, the console command
 "Hide me in the ranking" and "Show me in the ranking": they send
 `/gamewe_hideranking 1` or `/gamewe_hideranking 0` for the player, and the
 collector answers with the new state in chat. The plugin has
-no database, so it cannot show the current state; both choices are always
-offered. The gameME entries "Auto Ranking", "Toggle Ranking Display" and
+no database, so it cannot show the ranking state; both choices are always
+offered.
+
+The settings menu also has the player's own display settings, with their
+current value:
+
+- "Damage display" (CS:S, CS:GO, DoD:S): server default, off, menu, chat. With
+  "menu" the summary of the round (attackers, victims, killer) is shown as a
+  panel on death and at round end; with "chat" the killer, the damage and the
+  killer's health left are shown in chat on death.
+- "Spectator info" (CS:S, CS:GO): server default, off, on. Shows the stats of
+  the spectated player as a key hint.
+
+Selecting an entry switches to the next value and shows the menu again.
+"Server default" follows `gamewe_damage_display` / `gamewe_display_spectatorinfo`
+(the value is shown in brackets); an entry the server forbids
+(`*_allow 0`) is shown as disabled. The choices are saved in ClientPrefs
+cookies (see [CONFIG.md](CONFIG.md#per-player-settings)). The gameME entries "Auto Ranking", "Toggle Ranking Display" and
 "Reset Statistics" are gone: the collector has no such commands (players cannot hide
 themselves from the rankings or reset their statistics, and there are no
 commands to set profile data such as name, email or homepage).

@@ -137,4 +137,39 @@
 	{
 		"en"		"Show me in the ranking"
 	}
+	"SettingsMenu_Damage"
+	{
+		"#format"	"{1:s}"
+		"en"		"Damage display: {1}"
+	}
+	"SettingsMenu_Spectator"
+	{
+		"#format"	"{1:s}"
+		"en"		"Spectator info: {1}"
+	}
+	"SettingsValue_Default"
+	{
+		"#format"	"{1:s}"
+		"en"		"server default ({1})"
+	}
+	"SettingsValue_Off"
+	{
+		"en"		"off"
+	}
+	"SettingsValue_On"
+	{
+		"en"		"on"
+	}
+	"SettingsValue_Menu"
+	{
+		"en"		"menu"
+	}
+	"SettingsValue_Chat"
+	{
+		"en"		"chat"
+	}
+	"SettingsValue_Disabled"
+	{
+		"en"		"disabled by the server"
+	}
 }

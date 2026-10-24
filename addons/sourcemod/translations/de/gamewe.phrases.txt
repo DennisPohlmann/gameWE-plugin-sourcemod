@@ -136,4 +136,36 @@
 	{
 		"de"		"Mich in der Rangliste anzeigen"
 	}
+	"SettingsMenu_Damage"
+	{
+		"de"		"Schadensanzeige: {1}"
+	}
+	"SettingsMenu_Spectator"
+	{
+		"de"		"Zuschauer-Info: {1}"
+	}
+	"SettingsValue_Default"
+	{
+		"de"		"Server-Standard ({1})"
+	}
+	"SettingsValue_Off"
+	{
+		"de"		"aus"
+	}
+	"SettingsValue_On"
+	{
+		"de"		"an"
+	}
+	"SettingsValue_Menu"
+	{
+		"de"		"Menü"
+	}
+	"SettingsValue_Chat"
+	{
+		"de"		"Chat"
+	}
+	"SettingsValue_Disabled"
+	{
+		"de"		"vom Server abgeschaltet"
+	}
 }

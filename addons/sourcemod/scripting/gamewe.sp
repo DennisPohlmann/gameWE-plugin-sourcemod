@@ -100,6 +100,7 @@ enum struct gamewe_plugin_data {
   ConVar chat_cooldown;
   int protect_address_port;
   ConVar display_spectatorinfo;
+  ConVar allow_spectatorinfo;
   Menu menu_main;
   Menu menu_events;
   Menu menu_settings;
@@ -107,11 +108,14 @@ enum struct gamewe_plugin_data {
   ArrayStack message_recipients;
   ConVar enable_log_locations;
   ConVar enable_damage_display;
+  ConVar allow_damage_display;
   int log_locations;
   int damage_display;
-  int damage_display_type;
   int display_spectator;
   bool sdkhook_available;
+  bool clientprefs_available;
+  Handle cookie_damage_display;
+  Handle cookie_spectatorinfo;
   EngineVersion engine_version;
   bool ignore_next_tag_change;
   ArrayList custom_tags;
@@ -124,6 +128,21 @@ gamewe_plugin_data gamewe_plugin;
 
 // game time of the last gameWE command a player sent (chat or menu), for gamewe_chat_cooldown
 float gamewe_last_trigger[MAXPLAYERS + 1];
+
+
+/**
+ *  Per-player settings (gameWE settings menu, saved with clientprefs cookies)
+ *  -1 = use the server default (cvar), otherwise the player's own choice
+ */
+
+#define SETTING_SERVER_DEFAULT  -1
+
+enum struct player_settings {
+	int damage_display; // 0 = off, 1 = menu, 2 = chat
+	int spectatorinfo;  // 0 = off, 1 = on
+}
+
+player_settings gamewe_player_settings[MAXPLAYERS + 1];
 
 
 /**
@@ -563,9 +582,13 @@ public void OnPluginStart()
 
 	// setup default values
 	gamewe_plugin.log_locations       = 1;
-	gamewe_plugin.damage_display      = 0;
-	gamewe_plugin.damage_display_type = 1;
+	gamewe_plugin.damage_display      = 1;
+	gamewe_plugin.display_spectator   = 1;
 	gamewe_plugin.protobuf            = 0;
+
+	for (int i = 0; (i <= MAXPLAYERS); i++) {
+		reset_player_settings(i);
+	}
 
 	LoadTranslations("gamewe.phrases");
 
@@ -590,10 +613,12 @@ public void OnPluginStart()
 	gamewe_plugin.chat_cooldown = CreateConVar("gamewe_chat_cooldown", "1.0", "Seconds a player has to wait between two logged gameWE commands (0 = off)", FCVAR_NONE, true, 0.0, true, 30.0);
 	gamewe_plugin.enable_log_locations = CreateConVar("gamewe_log_locations", "1", "If activated the gameserver logs players locations");
 	HookConVarChange(gamewe_plugin.enable_log_locations, OnLogLocationsChange);
-	gamewe_plugin.display_spectatorinfo = CreateConVar("gamewe_display_spectatorinfo", "0", "If activated gameWE Stats data are displayed while spectating a player");
-	HookConVarChange(gamewe_plugin.display_spectatorinfo, OnDisplaySpectatorinfoChange);
-	gamewe_plugin.enable_damage_display = CreateConVar("gamewe_damage_display", "0", "If activated the damage summary is display on player_death (1 = menu, 2 = chat)");
-	HookConVarChange(gamewe_plugin.enable_damage_display, OnDamageDisplayChange);
+	gamewe_plugin.display_spectatorinfo = CreateConVar("gamewe_display_spectatorinfo", "0", "Default for players: display gameWE Stats data while spectating a player (0 = off, 1 = on); players can change it in the gameWE settings menu", FCVAR_NONE, true, 0.0, true, 1.0);
+	gamewe_plugin.allow_spectatorinfo = CreateConVar("gamewe_display_spectatorinfo_allow", "1", "Allow the spectator info at all (0 = off for everyone, players cannot enable it)", FCVAR_NONE, true, 0.0, true, 1.0);
+	HookConVarChange(gamewe_plugin.allow_spectatorinfo, OnDisplaySpectatorinfoAllowChange);
+	gamewe_plugin.enable_damage_display = CreateConVar("gamewe_damage_display", "0", "Default for players: damage summary on death and round end (0 = off, 1 = menu, 2 = chat); players can change it in the gameWE settings menu", FCVAR_NONE, true, 0.0, true, 2.0);
+	gamewe_plugin.allow_damage_display = CreateConVar("gamewe_damage_display_allow", "1", "Allow the damage display at all (0 = off for everyone, no damage tracking, players cannot enable it)", FCVAR_NONE, true, 0.0, true, 1.0);
+	HookConVarChange(gamewe_plugin.allow_damage_display, OnDamageDisplayAllowChange);
 
 	AutoExecConfig(true, "gamewe");
 
@@ -638,7 +663,7 @@ public void OnPluginStart()
 	RegServerCmd("gameme_team_action",    gamewe_team_action);
 	RegServerCmd("gameme_world_action",   gamewe_world_action);
 
-	RegConsoleCmd("sm_gamewe_settings",  gamewe_settings_command, "gameWE: your settings (hide or show yourself in the ranking)");
+	RegConsoleCmd("sm_gamewe_settings",  gamewe_settings_command, "gameWE: your settings (ranking, damage display, spectator info)");
 	RegConsoleCmd("say",                 gamewe_block_commands);
 	RegConsoleCmd("say_team",            gamewe_block_commands);
 
@@ -800,6 +825,10 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	MarkNativeAsOptional("CS_SwitchTeam");
 	MarkNativeAsOptional("CS_RespawnPlayer");
 	MarkNativeAsOptional("SetCookieMenuItem");
+	MarkNativeAsOptional("RegClientCookie");
+	MarkNativeAsOptional("GetClientCookie");
+	MarkNativeAsOptional("SetClientCookie");
+	MarkNativeAsOptional("AreClientCookiesCached");
 	MarkNativeAsOptional("SDKHook");
 
 	MarkNativeAsOptional("GetUserMessageType");
@@ -815,6 +844,9 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 public void OnAllPluginsLoaded()
 {
 	if (LibraryExists("clientprefs")) {
+		gamewe_plugin.cookie_damage_display = RegClientCookie("gamewe_damage_display", "gameWE: damage display (0 = off, 1 = menu, 2 = chat, empty = server default)", CookieAccess_Private);
+		gamewe_plugin.cookie_spectatorinfo  = RegClientCookie("gamewe_spectatorinfo", "gameWE: spectator info (0 = off, 1 = on, empty = server default)", CookieAccess_Private);
+		gamewe_plugin.clientprefs_available = true;
 		SetCookieMenuItem(gameWESettingsMenu, 0, "gameWE Settings");
 	}
 
@@ -857,6 +889,7 @@ public void OnAllPluginsLoaded()
 			}
 
 			if (!IsFakeClient(i)) {
+				load_player_settings(i);
 				QueryClientConVar(i, "cl_language", ClientConVar, i);
 				if ((gamewe_plugin.mod_id == MOD_TF2) || (gamewe_plugin.mod_id == MOD_CSS) || (gamewe_plugin.mod_id == MOD_DODS) || (gamewe_plugin.mod_id == MOD_HL2MP)) {
 					QueryClientConVar(i, "cl_connectmethod", ClientConVar, i);
@@ -890,6 +923,131 @@ public Action gamewe_settings_command(int client, int args)
 		DisplayMenu(gamewe_plugin.menu_settings, client, MENU_TIME_FOREVER);
 	}
 	return Plugin_Handled;
+}
+
+
+void reset_player_settings(int client)
+{
+	gamewe_player_settings[client].damage_display = SETTING_SERVER_DEFAULT;
+	gamewe_player_settings[client].spectatorinfo  = SETTING_SERVER_DEFAULT;
+}
+
+
+// cookie value -> setting; empty, "default" or anything invalid means the server default
+int parse_player_setting(const char[] value, int max_value)
+{
+	if ((value[0] == '\0') || (strcmp(value, "default") == 0)) {
+		return SETTING_SERVER_DEFAULT;
+	}
+	int setting = 0;
+	if ((StringToIntEx(value, setting) != strlen(value)) || (setting < 0) || (setting > max_value)) {
+		return SETTING_SERVER_DEFAULT;
+	}
+	return setting;
+}
+
+
+// loads the player's settings from the clientprefs cookies (once they are cached).
+// Without clientprefs the choices made in the menu last until the player disconnects.
+void load_player_settings(int client)
+{
+	if ((!gamewe_plugin.clientprefs_available) || (!AreClientCookiesCached(client))) {
+		return;
+	}
+
+	char value[16];
+	GetClientCookie(client, gamewe_plugin.cookie_damage_display, value, sizeof(value));
+	gamewe_player_settings[client].damage_display = parse_player_setting(value, 2);
+	GetClientCookie(client, gamewe_plugin.cookie_spectatorinfo, value, sizeof(value));
+	gamewe_player_settings[client].spectatorinfo = parse_player_setting(value, 1);
+}
+
+
+void save_player_setting(int client, Handle cookie, int setting)
+{
+	if ((!gamewe_plugin.clientprefs_available) || (cookie == INVALID_HANDLE) || (!AreClientCookiesCached(client))) {
+		return;
+	}
+
+	char value[16];
+	if (setting == SETTING_SERVER_DEFAULT) {
+		strcopy(value, sizeof(value), "");
+	} else {
+		IntToString(setting, value, sizeof(value));
+	}
+	SetClientCookie(client, cookie, value);
+}
+
+
+public void OnClientCookiesCached(int client)
+{
+	if ((client > 0) && (client <= MaxClients) && (!IsFakeClient(client))) {
+		load_player_settings(client);
+	}
+}
+
+
+// the player's damage display mode (0 = off, 1 = menu, 2 = chat):
+// the player's own choice, otherwise the server default gamewe_damage_display
+int get_damage_display_mode(int client)
+{
+	if (gamewe_plugin.damage_display == 0) {
+		return 0;
+	}
+	int mode = gamewe_player_settings[client].damage_display;
+	if (mode == SETTING_SERVER_DEFAULT) {
+		mode = GetConVarInt(gamewe_plugin.enable_damage_display);
+	}
+	if ((mode < 0) || (mode > 2)) {
+		mode = 0;
+	}
+	return mode;
+}
+
+
+// true if the player wants the spectator info: the player's own choice,
+// otherwise the server default gamewe_display_spectatorinfo
+bool is_spectatorinfo_enabled(int client)
+{
+	if (gamewe_plugin.display_spectator == 0) {
+		return false;
+	}
+	int setting = gamewe_player_settings[client].spectatorinfo;
+	if (setting == SETTING_SERVER_DEFAULT) {
+		setting = GetConVarInt(gamewe_plugin.display_spectatorinfo);
+	}
+	return (setting == 1);
+}
+
+
+bool mod_has_damage_display()
+{
+	return (gamewe_plugin.mod_id == MOD_CSGO) || (gamewe_plugin.mod_id == MOD_CSS) || (gamewe_plugin.mod_id == MOD_DODS);
+}
+
+
+bool mod_has_spectatorinfo()
+{
+	return (gamewe_plugin.mod_id == MOD_CSGO) || (gamewe_plugin.mod_id == MOD_CSS);
+}
+
+
+// shows the damage summary to a player who just died, in the player's display mode
+void display_damage_on_death(int victim)
+{
+	int damage_mode = get_damage_display_mode(victim);
+	if (damage_mode == 2) {
+		build_damage_chat(victim);
+	} else if (damage_mode == 1) {
+		build_damage_panel(victim);
+	} else {
+		// not displayed: forget the killer, so it does not show up after a later death
+		for (int i = 1; (i <= MaxClients); i++) {
+			player_damage[i][victim].dkiller = 0;
+			player_damage[i][victim].dhpleft = 0;
+			player_damage[i][victim].dweapon = -1;
+		}
+	}
 }
 
 
@@ -1264,6 +1422,7 @@ public void OnClientPutInServer(int client)
 		gamewe_players[client].pgglevel = 0;
 
 		if (!IsFakeClient(client)) {
+			load_player_settings(client);
 			QueryClientConVar(client, "cl_language", ClientConVar, client);
 			if ((gamewe_plugin.mod_id == MOD_TF2) || (gamewe_plugin.mod_id == MOD_CSS) || (gamewe_plugin.mod_id == MOD_DODS) || (gamewe_plugin.mod_id == MOD_HL2MP)) {
 				QueryClientConVar(client, "cl_connectmethod", ClientConVar, client);
@@ -1495,7 +1654,7 @@ public Action flush_weapon_logs(Handle timer, any index)
 
 public Action spectator_player_timer(Handle timer, any caller)
 {
-	if (((gamewe_plugin.mod_id == MOD_CSGO) || (gamewe_plugin.mod_id == MOD_CSS)) && (IsValidEntity(caller))) {
+	if (((gamewe_plugin.mod_id == MOD_CSGO) || (gamewe_plugin.mod_id == MOD_CSS)) && (IsValidEntity(caller)) && (is_spectatorinfo_enabled(caller))) {
 		int observer_mode = GetEntProp(caller, Prop_Send, "m_iObserverMode");
 		if ((!IsFakeClient(caller)) && ((observer_mode == SPECTATOR_FIRSTPERSON) || (observer_mode == SPECTATOR_3RDPERSON))) {
 			int target = GetEntPropEnt(caller, Prop_Send, "m_hObserverTarget");
@@ -1783,11 +1942,11 @@ public void build_damage_chat(int player_index)
 					int is_killer       = 0;
 					if (player_damage[i][j].dhits > 0) {
 						attacked_damage = player_damage[i][j].ddamage;
-						if (player_damage[i][j].dkills > 0) {
+						if (player_damage[i][j].dkiller > 0) {
 							killer_hpleft = player_damage[i][j].dhpleft;
 							is_killer++;
 
-							player_damage[i][j].dkills  = 0;
+							player_damage[i][j].dkiller = 0;
 							player_damage[i][j].dhpleft = 0;
 							player_damage[i][j].dweapon = -1;
 						}
@@ -2328,11 +2487,7 @@ public void Event_CSGOPlayerDeath(Event event, const char[] name, bool dontBroad
 						player_damage[attacker][victim].dheadshots += 1;
 					}
 
-					if (gamewe_plugin.damage_display_type == 2) {
-						build_damage_chat(victim);
-					} else {
-						build_damage_panel(victim);
-					}
+					display_damage_on_death(victim);
 
 				}
 			}
@@ -2412,11 +2567,7 @@ public void Event_CSSPlayerDeath(Event event, const char[] name, bool dontBroadc
 						player_damage[attacker][victim].dheadshots += 1;
 					}
 
-					if (gamewe_plugin.damage_display_type == 2) {
-						build_damage_chat(victim);
-					} else {
-						build_damage_panel(victim);
-					}
+					display_damage_on_death(victim);
 
 				}
 			}
@@ -2470,11 +2621,7 @@ public void Event_DODSPlayerDeath(Event event, const char[] name, bool dontBroad
 					player_damage[attacker][victim].dkiller  = attacker;
 					player_damage[attacker][victim].dweapon  = weapon_index;
 
-					if (gamewe_plugin.damage_display_type == 2) {
-						build_damage_chat(victim);
-					} else {
-						build_damage_panel(victim);
-					}
+					display_damage_on_death(victim);
 				}
 			}
 		}
@@ -2772,7 +2919,7 @@ public void Event_CSGORoundEnd(Event event, const char[] name, bool dontBroadcas
 {
 	for (int i = 1; (i <= MaxClients); i++) {
 		if ((IsClientConnected(i)) && (IsClientInGame(i)) && (IsPlayerAlive(i))) {
-			if (gamewe_plugin.damage_display_type == 1) {
+			if (get_damage_display_mode(i) == 1) {
 				build_damage_panel(i);
 			}
 		}
@@ -2785,7 +2932,7 @@ public void Event_CSSRoundEnd(Event event, const char[] name, bool dontBroadcast
 {
 	for (int i = 1; (i <= MaxClients); i++) {
 		if ((IsClientConnected(i)) && (IsClientInGame(i)) && (IsPlayerAlive(i))) {
-			if (gamewe_plugin.damage_display_type == 1) {
+			if (get_damage_display_mode(i) == 1) {
 				build_damage_panel(i);
 			}
 		}
@@ -2798,7 +2945,7 @@ public void Event_DODSRoundEnd(Event event, const char[] name, bool dontBroadcas
 {
 	for (int i = 1; (i <= MaxClients); i++) {
 		if ((IsClientConnected(i)) && (IsClientInGame(i)) && (IsPlayerAlive(i))) {
-			if (gamewe_plugin.damage_display_type == 1) {
+			if (get_damage_display_mode(i) == 1) {
 				build_damage_panel(i);
 			}
 		}
@@ -3150,66 +3297,52 @@ public void OnLogLocationsChange(ConVar cvar, const char[] oldVal, const char[] 
 }
 
 
-public void OnDisplaySpectatorinfoChange(ConVar cvar, const char[] oldVal, const char[] newVal)
+// gamewe_display_spectatorinfo_allow: the server can switch the spectator info off for everyone.
+// gamewe_display_spectatorinfo itself is only the default for players and is read when needed.
+public void OnDisplaySpectatorinfoAllowChange(ConVar cvar, const char[] oldVal, const char[] newVal)
 {
-	if (strcmp(newVal, "") != 0) {
-		if ((strcmp(newVal, "0") == 0) || (strcmp(newVal, "1") == 0)) {
-			if (((strcmp(newVal, "1") == 0) && (strcmp(oldVal, "1") != 0)) ||
-			   ((strcmp(newVal, "0") == 0) && (strcmp(oldVal, "0") != 0))) {
-
-				if (gamewe_plugin.display_spectatorinfo != INVALID_HANDLE) {
-					int display_info = GetConVarInt(gamewe_plugin.display_spectatorinfo);
-					if (display_info == 1) {
-						gamewe_plugin.display_spectator = 1;
-						LogToGame("gameWE spectator displaying activated");
-					} else if (display_info == 0) {
-						gamewe_plugin.display_spectator = 0;
-						for (int i = 1; (i <= MaxClients); i++) {
-							if (gamewe_players[i].pspectator.stimer != INVALID_HANDLE) {
-								KillTimer(gamewe_players[i].pspectator.stimer);
-								gamewe_players[i].pspectator.stimer = INVALID_HANDLE;
-							}
-						}
-						LogToGame("gameWE spectator displaying deactivated");
-					}
-				} else {
-					gamewe_plugin.display_spectator = 0;
-				}
+	if (GetConVarInt(cvar) == 1) {
+		if (gamewe_plugin.display_spectator == 0) {
+			gamewe_plugin.display_spectator = 1;
+			LogToGame("gameWE spectator displaying allowed");
+		}
+	} else if (gamewe_plugin.display_spectator == 1) {
+		gamewe_plugin.display_spectator = 0;
+		for (int i = 1; (i <= MaxClients); i++) {
+			if (gamewe_players[i].pspectator.stimer != INVALID_HANDLE) {
+				KillTimer(gamewe_players[i].pspectator.stimer);
+				gamewe_players[i].pspectator.stimer = INVALID_HANDLE;
 			}
 		}
+		LogToGame("gameWE spectator displaying deactivated");
 	}
 }
 
 
-public void OnDamageDisplayChange(ConVar cvar, const char[] oldVal, const char[] newVal)
+// gamewe_damage_display_allow: the server can switch the damage display (and its tracking) off
+// for everyone. gamewe_damage_display itself is only the default for players and is read when needed.
+public void OnDamageDisplayAllowChange(ConVar cvar, const char[] oldVal, const char[] newVal)
 {
-	if (strcmp(newVal, "") != 0) {
-		if ((strcmp(newVal, "0") == 0) || (strcmp(newVal, "1") == 0) || (strcmp(newVal, "2") == 0)) {
-
-			if (((strcmp(newVal, "2") == 0) && (strcmp(oldVal, "2") != 0)) ||
-			    ((strcmp(newVal, "1") == 0) && (strcmp(oldVal, "1") != 0)) ||
-			    ((strcmp(newVal, "0") == 0) && (strcmp(oldVal, "0") != 0))) {
-
-				if (gamewe_plugin.enable_damage_display != INVALID_HANDLE) {
-					int enable_damage_display_cvar = GetConVarInt(gamewe_plugin.enable_damage_display);
-					if (enable_damage_display_cvar == 1) {
-						gamewe_plugin.damage_display = 1;
-						gamewe_plugin.damage_display_type = 1;
-						LogToGame("gameWE damage display activated [Mode: Menu]");
-					} else if (enable_damage_display_cvar == 2) {
-						gamewe_plugin.damage_display = 1;
-						gamewe_plugin.damage_display_type = 2;
-						LogToGame("gameWE damage display activated [Mode: Chat]");
-					} else if (enable_damage_display_cvar == 0) {
-						gamewe_plugin.damage_display = 0;
-						LogToGame("gameWE damage display deactivated");
-					}
-				} else {
-					gamewe_plugin.damage_display = 0;
+	if (GetConVarInt(cvar) == 1) {
+		if (gamewe_plugin.damage_display == 0) {
+			for (int i = 0; (i <= MAXPLAYERS); i++) {
+				for (int j = 0; (j <= MAXPLAYERS); j++) {
+					player_damage[i][j].dhits      = 0;
+					player_damage[i][j].dkills     = 0;
+					player_damage[i][j].dheadshots = 0;
+					player_damage[i][j].ddamage    = 0;
+					player_damage[i][j].dkiller    = 0;
+					player_damage[i][j].dhpleft    = 0;
+					player_damage[i][j].dteamkill  = 0;
+					player_damage[i][j].dweapon    = 0;
 				}
-
 			}
+			gamewe_plugin.damage_display = 1;
+			LogToGame("gameWE damage display allowed");
 		}
+	} else if (gamewe_plugin.damage_display == 1) {
+		gamewe_plugin.damage_display = 0;
+		LogToGame("gameWE damage display deactivated");
 	}
 }
 
@@ -3643,6 +3776,7 @@ void color_gamewe_entities(char[] message)
 public void OnClientDisconnect(int client)
 {
 	if (client > 0) {
+		reset_player_settings(client);
 		if ((gamewe_plugin.mod_id == MOD_CSGO) || (gamewe_plugin.mod_id == MOD_CSS) || (gamewe_plugin.mod_id == MOD_DODS) || (gamewe_plugin.mod_id == MOD_L4D) || (gamewe_plugin.mod_id == MOD_L4DII) || (gamewe_plugin.mod_id == MOD_INSMOD) || (gamewe_plugin.mod_id == MOD_HL2MP) || (gamewe_plugin.mod_id == MOD_TF2) || (gamewe_plugin.mod_id == MOD_ZPS)) {
 			dump_player_data(client);
 			reset_player_data(client);
@@ -5153,19 +5287,72 @@ public void CreateGameWEMenuMain(Menu &MenuHandle)
 }
 
 
-// The player's settings. The plugin does not know the current state (it has
-// no database), so both choices are offered; the collector answers with the
-// new state in chat.
+// The player's settings. The ranking entries are answered by the collector
+// (the plugin has no database, so both choices are offered and the collector
+// answers with the new state in chat). The display entries are kept by the
+// plugin (clientprefs cookies): selecting one switches to the next value and
+// shows the menu again with the current value.
 public void CreateGameWEMenuSettings(Menu &MenuHandle)
 {
-	MenuHandle = CreateMenu(gameWESettingsCommandHandler, MenuAction_Display | MenuAction_DisplayItem  | MenuAction_Select | MenuAction_Cancel);
+	MenuHandle = CreateMenu(gameWESettingsCommandHandler, MenuAction_Display | MenuAction_DisplayItem | MenuAction_DrawItem | MenuAction_Select | MenuAction_Cancel);
 
 	SetMenuTitle(MenuHandle, "gameWE - Settings");
 
 	AddMenuItem(MenuHandle, "SettingsMenu_Hide", "Hide me in the ranking");
 	AddMenuItem(MenuHandle, "SettingsMenu_Show", "Show me in the ranking");
+	if (mod_has_damage_display()) {
+		AddMenuItem(MenuHandle, "SettingsMenu_Damage", "Damage display");
+	}
+	if (mod_has_spectatorinfo()) {
+		AddMenuItem(MenuHandle, "SettingsMenu_Spectator", "Spectator info");
+	}
 
 	SetMenuPagination(MenuHandle, 8);
+}
+
+
+// name of a damage display mode in the player's language
+void format_damage_mode(int client, int mode, char[] buffer, int maxlen)
+{
+	if (mode == 1) {
+		Format(buffer, maxlen, "%T", "SettingsValue_Menu", client);
+	} else if (mode == 2) {
+		Format(buffer, maxlen, "%T", "SettingsValue_Chat", client);
+	} else {
+		Format(buffer, maxlen, "%T", "SettingsValue_Off", client);
+	}
+}
+
+
+// current value of a settings entry as shown in the menu
+void format_setting_value(int client, const char[] info, char[] buffer, int maxlen)
+{
+	char name[64];
+	if (strcmp(info, "SettingsMenu_Damage") == 0) {
+		if (gamewe_plugin.damage_display == 0) {
+			Format(buffer, maxlen, "%T", "SettingsValue_Disabled", client);
+		} else if (gamewe_player_settings[client].damage_display == SETTING_SERVER_DEFAULT) {
+			format_damage_mode(client, get_damage_display_mode(client), name, sizeof(name));
+			Format(buffer, maxlen, "%T", "SettingsValue_Default", client, name);
+		} else {
+			format_damage_mode(client, gamewe_player_settings[client].damage_display, buffer, maxlen);
+		}
+	} else {
+		if (gamewe_plugin.display_spectator == 0) {
+			Format(buffer, maxlen, "%T", "SettingsValue_Disabled", client);
+		} else {
+			if (is_spectatorinfo_enabled(client)) {
+				Format(name, sizeof(name), "%T", "SettingsValue_On", client);
+			} else {
+				Format(name, sizeof(name), "%T", "SettingsValue_Off", client);
+			}
+			if (gamewe_player_settings[client].spectatorinfo == SETTING_SERVER_DEFAULT) {
+				Format(buffer, maxlen, "%T", "SettingsValue_Default", client, name);
+			} else {
+				strcopy(buffer, maxlen, name);
+			}
+		}
+	}
 }
 
 
@@ -5177,9 +5364,28 @@ public int gameWESettingsCommandHandler(Menu menu, MenuAction action, int param1
 		GetMenuItem(menu, param2, info, sizeof(info), _, "", 0);
 
 		char buffer[255];
-		Format(buffer, sizeof(buffer), "%T", info, param1);
+		if ((strcmp(info, "SettingsMenu_Damage") == 0) || (strcmp(info, "SettingsMenu_Spectator") == 0)) {
+			char value[128];
+			format_setting_value(param1, info, value, sizeof(value));
+			Format(buffer, sizeof(buffer), "%T", info, param1, value);
+		} else {
+			Format(buffer, sizeof(buffer), "%T", info, param1);
+		}
 
 		return RedrawMenuItem(buffer);
+
+	} else if (action == MenuAction_DrawItem) {
+
+		char info[64];
+		int style;
+		GetMenuItem(menu, param2, info, sizeof(info), style, "", 0);
+
+		// the server switched the feature off: show it, but it cannot be changed
+		if (((strcmp(info, "SettingsMenu_Damage") == 0) && (gamewe_plugin.damage_display == 0)) ||
+		    ((strcmp(info, "SettingsMenu_Spectator") == 0) && (gamewe_plugin.display_spectator == 0))) {
+			return ITEMDRAW_DISABLED;
+		}
+		return style;
 
 	} else if (action == MenuAction_Display) {
 
@@ -5192,11 +5398,27 @@ public int gameWESettingsCommandHandler(Menu menu, MenuAction action, int param1
 	} else if (action == MenuAction_Select) {
 
 		if (IsClientInGame(param1)) {
-			switch (param2) {
-				case 0 :
-					make_player_command(param1, "/gamewe_hideranking 1");
-				case 1 :
-					make_player_command(param1, "/gamewe_hideranking 0");
+			char info[64];
+			GetMenuItem(menu, param2, info, sizeof(info), _, "", 0);
+
+			if (strcmp(info, "SettingsMenu_Hide") == 0) {
+				make_player_command(param1, "/gamewe_hideranking 1");
+			} else if (strcmp(info, "SettingsMenu_Show") == 0) {
+				make_player_command(param1, "/gamewe_hideranking 0");
+			} else if ((strcmp(info, "SettingsMenu_Damage") == 0) && (gamewe_plugin.damage_display == 1)) {
+				// server default -> off -> menu -> chat -> server default
+				int setting = gamewe_player_settings[param1].damage_display;
+				setting = (setting >= 2) ? SETTING_SERVER_DEFAULT : (setting + 1);
+				gamewe_player_settings[param1].damage_display = setting;
+				save_player_setting(param1, gamewe_plugin.cookie_damage_display, setting);
+				DisplayMenuAtItem(menu, param1, GetMenuSelectionPosition(), MENU_TIME_FOREVER);
+			} else if ((strcmp(info, "SettingsMenu_Spectator") == 0) && (gamewe_plugin.display_spectator == 1)) {
+				// server default -> off -> on -> server default
+				int setting = gamewe_player_settings[param1].spectatorinfo;
+				setting = (setting >= 1) ? SETTING_SERVER_DEFAULT : (setting + 1);
+				gamewe_player_settings[param1].spectatorinfo = setting;
+				save_player_setting(param1, gamewe_plugin.cookie_spectatorinfo, setting);
+				DisplayMenuAtItem(menu, param1, GetMenuSelectionPosition(), MENU_TIME_FOREVER);
 			}
 		}
 	}

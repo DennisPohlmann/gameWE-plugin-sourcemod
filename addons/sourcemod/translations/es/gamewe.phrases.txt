@@ -136,4 +136,36 @@
 	{
 		"es"		"Mostrarme en el ranking"
 	}
+	"SettingsMenu_Damage"
+	{
+		"es"		"Mostrar daño: {1}"
+	}
+	"SettingsMenu_Spectator"
+	{
+		"es"		"Info de espectador: {1}"
+	}
+	"SettingsValue_Default"
+	{
+		"es"		"predeterminado del servidor ({1})"
+	}
+	"SettingsValue_Off"
+	{
+		"es"		"desactivado"
+	}
+	"SettingsValue_On"
+	{
+		"es"		"activado"
+	}
+	"SettingsValue_Menu"
+	{
+		"es"		"menú"
+	}
+	"SettingsValue_Chat"
+	{
+		"es"		"chat"
+	}
+	"SettingsValue_Disabled"
+	{
+		"es"		"desactivado por el servidor"
+	}
 }

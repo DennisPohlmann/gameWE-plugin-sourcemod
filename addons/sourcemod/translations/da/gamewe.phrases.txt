@@ -131,4 +131,36 @@
 	{
 		"da"		"Vis mig på ranglisten"
 	}
+	"SettingsMenu_Damage"
+	{
+		"da"		"Skadesvisning: {1}"
+	}
+	"SettingsMenu_Spectator"
+	{
+		"da"		"Tilskuerinfo: {1}"
+	}
+	"SettingsValue_Default"
+	{
+		"da"		"serverstandard ({1})"
+	}
+	"SettingsValue_Off"
+	{
+		"da"		"fra"
+	}
+	"SettingsValue_On"
+	{
+		"da"		"til"
+	}
+	"SettingsValue_Menu"
+	{
+		"da"		"menu"
+	}
+	"SettingsValue_Chat"
+	{
+		"da"		"chat"
+	}
+	"SettingsValue_Disabled"
+	{
+		"da"		"slået fra af serveren"
+	}
 }

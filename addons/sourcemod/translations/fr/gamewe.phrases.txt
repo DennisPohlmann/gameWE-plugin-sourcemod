@@ -135,4 +135,36 @@
 	{
 		"fr"		"M'afficher dans le classement"
 	}
+	"SettingsMenu_Damage"
+	{
+		"fr"		"Affichage des dégâts : {1}"
+	}
+	"SettingsMenu_Spectator"
+	{
+		"fr"		"Infos spectateur : {1}"
+	}
+	"SettingsValue_Default"
+	{
+		"fr"		"défaut du serveur ({1})"
+	}
+	"SettingsValue_Off"
+	{
+		"fr"		"désactivé"
+	}
+	"SettingsValue_On"
+	{
+		"fr"		"activé"
+	}
+	"SettingsValue_Menu"
+	{
+		"fr"		"menu"
+	}
+	"SettingsValue_Chat"
+	{
+		"fr"		"chat"
+	}
+	"SettingsValue_Disabled"
+	{
+		"fr"		"désactivé par le serveur"
+	}
 }
