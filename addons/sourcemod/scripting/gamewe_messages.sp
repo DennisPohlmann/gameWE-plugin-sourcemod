@@ -33,7 +33,7 @@
 
 // plugin information
 #if !defined GAMEWE_PLUGIN_VERSION
-#define GAMEWE_PLUGIN_VERSION "0.1.0"
+#define GAMEWE_PLUGIN_VERSION "0.2.0"
 #endif
 public Plugin myinfo = {
 	name = "gameWE Raw Messages Example",
