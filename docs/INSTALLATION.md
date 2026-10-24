@@ -1,4 +1,4 @@
-# Installing the gameWE SourceMod plugin
+# Installing gameWE - SourceMod plugin
 
 The plugin runs on each Source game server and works together with the
 [gameWE collector](https://github.com/DennisPohlmann/gameWE-collector): it writes
@@ -7,6 +7,17 @@ extra log lines for the collector and executes the collector's replies
 
 Placeholders below: `203.0.113.5` is the collector host, `198.51.100.7:27015`
 the game server, `change-me` your RCON password.
+
+1. [Requirements](#requirements)
+2. [Supported games](#supported-games)
+3. [Install](#install)
+4. [Game server setup](#game-server-setup)
+5. [Settings](#settings-cfgsourcemodgamewecfg)
+6. [Pairing with the collector](#pairing-with-the-collector)
+7. [Reload](#reload)
+8. [Update](#update)
+9. [Uninstall](#uninstall)
+10. [Coming from the gameME plugin](#coming-from-the-gameme-plugin)
 
 ## Requirements
 
@@ -58,7 +69,8 @@ The server log shows the result after the start: `gameWE Game Detection: ...`.
 
 3. Remove the original gameME plugin if it is installed
    (`addons/sourcemod/plugins/gameme.smx`, `translations/gameme.phrases.txt`):
-   both would answer every command twice.
+   both would answer every command twice (see
+   [Coming from the gameME plugin](#coming-from-the-gameme-plugin)).
 4. Restart the server or change the map, then check in the server console:
 
    ```
@@ -88,19 +100,7 @@ minute.
 
 ## Settings (`cfg/sourcemod/gamewe.cfg`)
 
-| ConVar | Default | Meaning |
-|--------|---------|---------|
-| `gamewe_chat_cooldown` | `1.0` | Seconds between two gameWE commands of one player that are passed to the collector (silent `/` commands and menu entries), 0-30, `0` = off |
-| `gamewe_block_commands_values` | | More commands that are silent when typed with `/`, separated by spaces; `clear` removes all, including the defaults |
-| `gamewe_message_prefix` | | Text in front of every gameWE message (color tags allowed); `gamewe_message_prefix_clear` empties it |
-| `gamewe_protect_address` | | `ip:port` of the collector to keep registered |
-| `gamewe_log_locations` | `1` | Log player positions with kills and actions (heatmaps) |
-| `gamewe_display_spectatorinfo` | `0` | CS:S, CS:GO: show the stats of the spectated player |
-| `gamewe_damage_display` | `0` | Damage summary on death: `0` off, `1` menu, `2` chat |
-| `gamewe_plugin_version` | | Read only: the plugin version |
-
-`/rank` is always silent (the plugin logs it), `!rank` and `rank` stay visible
-(the engine logs them); the collector answers both privately. Changes in
+All ConVars with their defaults are in [CONFIG.md](CONFIG.md). Changes in
 `gamewe.cfg` apply after `exec sourcemod/gamewe.cfg`, a map change or a reload.
 
 ## Pairing with the collector
@@ -131,9 +131,9 @@ sm plugins reload gamewe
 or change the map. After replacing `gamewe.smx` a reload is enough; players
 keep playing.
 
-## Upgrade
+## Update
 
-1. Read the release's entry in `CHANGELOG.md`.
+1. Read the release's entry in [CHANGELOG.md](../CHANGELOG.md).
 2. Extract the new archive over the old files (as in Install, step 2).
 3. `sm plugins reload gamewe` or change the map.
 
@@ -149,3 +149,14 @@ Delete `addons/sourcemod/plugins/gamewe.smx`,
 `addons/sourcemod/translations/gamewe.phrases.txt`, the
 `translations/<lang>/gamewe.phrases.txt` files and `cfg/sourcemod/gamewe.cfg`,
 then `sm plugins unload gamewe` or change the map.
+
+## Coming from the gameME plugin
+
+- Remove `gameme.smx` and `translations/gameme.phrases.txt`. Do not run both plugins
+  at the same time: both handle the `gameme_*` commands and log the same events,
+  so players would get every message twice.
+- The ConVars are renamed from `gameme_*` to `gamewe_*`. Copy your values from
+  `cfg/sourcemod/gameme.cfg` or `server.cfg` into `cfg/sourcemod/gamewe.cfg`.
+  `gameme_webpage` is gone.
+- Server commands, natives and forwards work with both prefixes. Nothing to change.
+- Log lines are the same as before.
