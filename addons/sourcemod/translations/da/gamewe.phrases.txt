@@ -171,4 +171,76 @@
 	{
 		"da"		"slået fra af serveren"
 	}
+	"SettingsMenu_Display"
+	{
+		"da"		"Konsolhændelser: {1}"
+	}
+	"SettingsMenu_Chat"
+	{
+		"da"		"Global chat: {1}"
+	}
+	"Chat_OnOffUsage"
+	{
+		"da"		"Brug {1} 1 (til) eller {1} 0 (fra)."
+	}
+	"Chat_DisplayOn"
+	{
+		"da"		"Konsolhændelser til: point for dine drab og handlinger vises i konsollen."
+	}
+	"Chat_DisplayOff"
+	{
+		"da"		"Konsolhændelser fra."
+	}
+	"Chat_ChatOn"
+	{
+		"da"		"Globale chathændelser til."
+	}
+	"Chat_ChatOff"
+	{
+		"da"		"Globale chathændelser fra."
+	}
+	"Auto_Start"
+	{
+		"da"		"rundestart"
+	}
+	"Auto_End"
+	{
+		"da"		"rundeslut"
+	}
+	"Auto_Kill"
+	{
+		"da"		"din død"
+	}
+	"Auto_Set"
+	{
+		"da"		"{2} sendes nu for dig ved: {1}."
+	}
+	"Auto_Removed"
+	{
+		"da"		"Ingen automatisk kommando ved: {1} længere."
+	}
+	"Auto_Cleared"
+	{
+		"da"		"Dine automatiske kommandoer er slettet."
+	}
+	"Auto_List"
+	{
+		"da"		"Automatiske kommandoer: rundestart {1}, rundeslut {2}, død {3}."
+	}
+	"Auto_Usage"
+	{
+		"da"		"Brug gamewe_auto start|end|kill <kommando> eller gamewe_auto clear. Kommandoer: rank, kpd, session, next, top5, top10, top20, statsme"
+	}
+	"Auto_Unknown"
+	{
+		"da"		"{1} kan ikke være en automatisk kommando."
+	}
+	"Lang_Set"
+	{
+		"da"		"Sprog: {1}."
+	}
+	"Lang_Usage"
+	{
+		"da"		"Brug gamewe_lang en, de, ru, es, fr, pt, nl, dk eller pl."
+	}
 }

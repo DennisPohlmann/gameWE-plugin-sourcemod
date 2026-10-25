@@ -176,4 +176,76 @@
 	{
 		"de"		"vom Server abgeschaltet"
 	}
+	"SettingsMenu_Display"
+	{
+		"de"		"Konsolen-Ereignisse: {1}"
+	}
+	"SettingsMenu_Chat"
+	{
+		"de"		"Globaler Chat: {1}"
+	}
+	"Chat_OnOffUsage"
+	{
+		"de"		"Nutze {1} 1 (an) oder {1} 0 (aus)."
+	}
+	"Chat_DisplayOn"
+	{
+		"de"		"Konsolen-Ereignisse an: Die Punkte deiner Kills und Aktionen erscheinen in der Konsole."
+	}
+	"Chat_DisplayOff"
+	{
+		"de"		"Konsolen-Ereignisse aus."
+	}
+	"Chat_ChatOn"
+	{
+		"de"		"Globale Chat-Ereignisse an."
+	}
+	"Chat_ChatOff"
+	{
+		"de"		"Globale Chat-Ereignisse aus."
+	}
+	"Auto_Start"
+	{
+		"de"		"Rundenstart"
+	}
+	"Auto_End"
+	{
+		"de"		"Rundenende"
+	}
+	"Auto_Kill"
+	{
+		"de"		"deinem Tod"
+	}
+	"Auto_Set"
+	{
+		"de"		"{2} wird jetzt bei {1} für dich gesendet."
+	}
+	"Auto_Removed"
+	{
+		"de"		"Bei {1} wird kein Befehl mehr gesendet."
+	}
+	"Auto_Cleared"
+	{
+		"de"		"Deine automatischen Befehle sind gelöscht."
+	}
+	"Auto_List"
+	{
+		"de"		"Automatische Befehle: Rundenstart {1}, Rundenende {2}, Tod {3}."
+	}
+	"Auto_Usage"
+	{
+		"de"		"Nutze gamewe_auto start|end|kill <Befehl> oder gamewe_auto clear. Befehle: rank, kpd, session, next, top5, top10, top20, statsme"
+	}
+	"Auto_Unknown"
+	{
+		"de"		"{1} kann kein automatischer Befehl sein."
+	}
+	"Lang_Set"
+	{
+		"de"		"Sprache: {1}."
+	}
+	"Lang_Usage"
+	{
+		"de"		"Nutze gamewe_lang en, de, ru, es, fr, pt, nl, dk oder pl."
+	}
 }

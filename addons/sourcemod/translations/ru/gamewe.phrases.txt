@@ -176,4 +176,76 @@
 	{
 		"ru"		"отключено сервером"
 	}
+	"SettingsMenu_Display"
+	{
+		"ru"		"События в консоли: {1}"
+	}
+	"SettingsMenu_Chat"
+	{
+		"ru"		"Общий чат: {1}"
+	}
+	"Chat_OnOffUsage"
+	{
+		"ru"		"Используй {1} 1 (вкл) или {1} 0 (выкл)."
+	}
+	"Chat_DisplayOn"
+	{
+		"ru"		"События в консоли включены: очки за убийства и действия выводятся в консоль."
+	}
+	"Chat_DisplayOff"
+	{
+		"ru"		"События в консоли выключены."
+	}
+	"Chat_ChatOn"
+	{
+		"ru"		"События в общем чате включены."
+	}
+	"Chat_ChatOff"
+	{
+		"ru"		"События в общем чате выключены."
+	}
+	"Auto_Start"
+	{
+		"ru"		"начало раунда"
+	}
+	"Auto_End"
+	{
+		"ru"		"конец раунда"
+	}
+	"Auto_Kill"
+	{
+		"ru"		"твоя смерть"
+	}
+	"Auto_Set"
+	{
+		"ru"		"{2} теперь отправляется за тебя: {1}."
+	}
+	"Auto_Removed"
+	{
+		"ru"		"Автокоманды для «{1}» больше нет."
+	}
+	"Auto_Cleared"
+	{
+		"ru"		"Твои автокоманды удалены."
+	}
+	"Auto_List"
+	{
+		"ru"		"Автокоманды: начало раунда {1}, конец раунда {2}, смерть {3}."
+	}
+	"Auto_Usage"
+	{
+		"ru"		"Используй gamewe_auto start|end|kill <команда> или gamewe_auto clear. Команды: rank, kpd, session, next, top5, top10, top20, statsme"
+	}
+	"Auto_Unknown"
+	{
+		"ru"		"{1} не может быть автокомандой."
+	}
+	"Lang_Set"
+	{
+		"ru"		"Язык: {1}."
+	}
+	"Lang_Usage"
+	{
+		"ru"		"Используй gamewe_lang en, de, ru, es, fr, pt, nl, dk или pl."
+	}
 }

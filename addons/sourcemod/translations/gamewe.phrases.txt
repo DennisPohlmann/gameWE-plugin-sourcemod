@@ -180,4 +180,84 @@
 	{
 		"en"		"disabled by the server"
 	}
+	"SettingsMenu_Display"
+	{
+		"#format"	"{1:s}"
+		"en"		"Console events: {1}"
+	}
+	"SettingsMenu_Chat"
+	{
+		"#format"	"{1:s}"
+		"en"		"Global chat: {1}"
+	}
+	"Chat_OnOffUsage"
+	{
+		"#format"	"{1:s}"
+		"en"		"Use {1} 1 (on) or {1} 0 (off)."
+	}
+	"Chat_DisplayOn"
+	{
+		"en"		"Console events on: the points of your kills and actions are shown in the console."
+	}
+	"Chat_DisplayOff"
+	{
+		"en"		"Console events off."
+	}
+	"Chat_ChatOn"
+	{
+		"en"		"Global chat events on."
+	}
+	"Chat_ChatOff"
+	{
+		"en"		"Global chat events off."
+	}
+	"Auto_Start"
+	{
+		"en"		"round start"
+	}
+	"Auto_End"
+	{
+		"en"		"round end"
+	}
+	"Auto_Kill"
+	{
+		"en"		"your death"
+	}
+	"Auto_Set"
+	{
+		"#format"	"{1:s},{2:s}"
+		"en"		"{2} is now sent for you at {1}."
+	}
+	"Auto_Removed"
+	{
+		"#format"	"{1:s}"
+		"en"		"No auto command at {1} any more."
+	}
+	"Auto_Cleared"
+	{
+		"en"		"Your auto commands are cleared."
+	}
+	"Auto_List"
+	{
+		"#format"	"{1:s},{2:s},{3:s}"
+		"en"		"Auto commands: round start {1}, round end {2}, death {3}."
+	}
+	"Auto_Usage"
+	{
+		"en"		"Use gamewe_auto start|end|kill <command> or gamewe_auto clear. Commands: rank, kpd, session, next, top5, top10, top20, statsme"
+	}
+	"Auto_Unknown"
+	{
+		"#format"	"{1:s}"
+		"en"		"{1} cannot be an auto command."
+	}
+	"Lang_Set"
+	{
+		"#format"	"{1:s}"
+		"en"		"Language: {1}."
+	}
+	"Lang_Usage"
+	{
+		"en"		"Use gamewe_lang en, de, ru, es, fr, pt, nl, dk or pl."
+	}
 }

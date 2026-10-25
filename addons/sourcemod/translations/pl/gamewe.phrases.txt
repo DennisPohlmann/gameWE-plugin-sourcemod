@@ -176,4 +176,76 @@
 	{
 		"pl"		"wyłączone przez serwer"
 	}
+	"SettingsMenu_Display"
+	{
+		"pl"		"Zdarzenia w konsoli: {1}"
+	}
+	"SettingsMenu_Chat"
+	{
+		"pl"		"Czat globalny: {1}"
+	}
+	"Chat_OnOffUsage"
+	{
+		"pl"		"Użyj {1} 1 (wł.) lub {1} 0 (wył.)."
+	}
+	"Chat_DisplayOn"
+	{
+		"pl"		"Zdarzenia w konsoli włączone: punkty za zabójstwa i akcje pojawiają się w konsoli."
+	}
+	"Chat_DisplayOff"
+	{
+		"pl"		"Zdarzenia w konsoli wyłączone."
+	}
+	"Chat_ChatOn"
+	{
+		"pl"		"Zdarzenia czatu globalnego włączone."
+	}
+	"Chat_ChatOff"
+	{
+		"pl"		"Zdarzenia czatu globalnego wyłączone."
+	}
+	"Auto_Start"
+	{
+		"pl"		"początek rundy"
+	}
+	"Auto_End"
+	{
+		"pl"		"koniec rundy"
+	}
+	"Auto_Kill"
+	{
+		"pl"		"twoja śmierć"
+	}
+	"Auto_Set"
+	{
+		"pl"		"{2} jest teraz wysyłane za ciebie: {1}."
+	}
+	"Auto_Removed"
+	{
+		"pl"		"Brak automatycznej komendy: {1}."
+	}
+	"Auto_Cleared"
+	{
+		"pl"		"Twoje automatyczne komendy zostały usunięte."
+	}
+	"Auto_List"
+	{
+		"pl"		"Automatyczne komendy: początek rundy {1}, koniec rundy {2}, śmierć {3}."
+	}
+	"Auto_Usage"
+	{
+		"pl"		"Użyj gamewe_auto start|end|kill <komenda> lub gamewe_auto clear. Komendy: rank, kpd, session, next, top5, top10, top20, statsme"
+	}
+	"Auto_Unknown"
+	{
+		"pl"		"{1} nie może być automatyczną komendą."
+	}
+	"Lang_Set"
+	{
+		"pl"		"Język: {1}."
+	}
+	"Lang_Usage"
+	{
+		"pl"		"Użyj gamewe_lang en, de, ru, es, fr, pt, nl, dk lub pl."
+	}
 }

@@ -175,4 +175,76 @@
 	{
 		"fr"		"désactivé par le serveur"
 	}
+	"SettingsMenu_Display"
+	{
+		"fr"		"Événements console : {1}"
+	}
+	"SettingsMenu_Chat"
+	{
+		"fr"		"Chat global : {1}"
+	}
+	"Chat_OnOffUsage"
+	{
+		"fr"		"Utilise {1} 1 (activé) ou {1} 0 (désactivé)."
+	}
+	"Chat_DisplayOn"
+	{
+		"fr"		"Événements console activés : les points de tes kills et actions s'affichent dans la console."
+	}
+	"Chat_DisplayOff"
+	{
+		"fr"		"Événements console désactivés."
+	}
+	"Chat_ChatOn"
+	{
+		"fr"		"Événements du chat global activés."
+	}
+	"Chat_ChatOff"
+	{
+		"fr"		"Événements du chat global désactivés."
+	}
+	"Auto_Start"
+	{
+		"fr"		"début de manche"
+	}
+	"Auto_End"
+	{
+		"fr"		"fin de manche"
+	}
+	"Auto_Kill"
+	{
+		"fr"		"ta mort"
+	}
+	"Auto_Set"
+	{
+		"fr"		"{2} est maintenant envoyé pour toi : {1}."
+	}
+	"Auto_Removed"
+	{
+		"fr"		"Plus de commande automatique : {1}."
+	}
+	"Auto_Cleared"
+	{
+		"fr"		"Tes commandes automatiques sont effacées."
+	}
+	"Auto_List"
+	{
+		"fr"		"Commandes automatiques : début de manche {1}, fin de manche {2}, mort {3}."
+	}
+	"Auto_Usage"
+	{
+		"fr"		"Utilise gamewe_auto start|end|kill <commande> ou gamewe_auto clear. Commandes : rank, kpd, session, next, top5, top10, top20, statsme"
+	}
+	"Auto_Unknown"
+	{
+		"fr"		"{1} ne peut pas être une commande automatique."
+	}
+	"Lang_Set"
+	{
+		"fr"		"Langue : {1}."
+	}
+	"Lang_Usage"
+	{
+		"fr"		"Utilise gamewe_lang en, de, ru, es, fr, pt, nl, dk ou pl."
+	}
 }

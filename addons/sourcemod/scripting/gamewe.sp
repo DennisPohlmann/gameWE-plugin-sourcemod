@@ -72,17 +72,18 @@ char team_list[16][32];
 
 // chat commands answered by the collector, also blocked with "/" and "!" in front
 static const char default_blocked_commands[][] = {
-	"rank", "skill", "points", "place", "session", "sdata", "kpd", "kdratio", "kdeath",
-	"next", "load", "status", "top20", "top10", "top5", "maps", "map_stats", "clans",
+	"rank", "skill", "points", "place", "session", "sdata", "session_data", "kpd", "kdratio", "kdeath",
+	"next", "load", "status", "servers", "top20", "top10", "top5", "maps", "map_stats", "clans",
 	"cheaters", "statsme", "weapons", "weapon", "action", "actions", "accuracy",
-	"targets", "target", "kills", "kill", "player_kills", "cmds", "commands", "help",
+	"targets", "target", "kills", "kill", "player_kills", "cmd", "cmds", "commands", "help",
 	"gstats", "global_stats", "gamewe", "gamewe_menu", "gamewe_display 0", "gamewe_display 1",
 	"gamewe_atb 0", "gamewe_atb 1", "gamewe_hideranking", "gamewe_hideranking 0", "gamewe_hideranking 1",
 	"hideranking", "hideranking 0", "hideranking 1", "hideranking on", "hideranking off",
-	"gamewe_hideranking on", "gamewe_hideranking off", "gamewe_reset",
+	"gamewe_hideranking on", "gamewe_hideranking off", "gamewe_reset", "gamewe_reset 0", "gamewe_reset 1",
 	"gamewe_chat 0", "gamewe_chat 1",
 	"gameme", "gameme_menu", "gameme_display 0", "gameme_display 1",
-	"gameme_atb 0", "gameme_atb 1", "gameme_hideranking", "gameme_reset",
+	"gameme_atb 0", "gameme_atb 1", "gameme_hideranking", "gameme_hideranking 0", "gameme_hideranking 1",
+	"gameme_hideranking on", "gameme_hideranking off", "gameme_reset", "gameme_reset 0", "gameme_reset 1",
 	"gameme_chat 0", "gameme_chat 1"
 };
 
@@ -117,6 +118,10 @@ enum struct gamewe_plugin_data {
   bool clientprefs_available;
   Handle cookie_damage_display;
   Handle cookie_spectatorinfo;
+  Handle cookie_console_events;
+  Handle cookie_global_chat;
+  Handle cookie_auto;
+  Handle cookie_lang;
   EngineVersion engine_version;
   bool ignore_next_tag_change;
   ArrayList custom_tags;
@@ -129,6 +134,9 @@ gamewe_plugin_data gamewe_plugin;
 
 // game time of the last gameWE command a player sent (chat or menu), for gamewe_chat_cooldown
 float gamewe_last_trigger[MAXPLAYERS + 1];
+// game time of the last auto command per player and event: games that fire
+// two round end events (round_end and teamplay_round_win) send it once
+float gamewe_last_auto[MAXPLAYERS + 1][3];
 
 
 /**
@@ -140,9 +148,34 @@ float gamewe_last_trigger[MAXPLAYERS + 1];
 
 #define HIDERANKING_UNKNOWN     -1
 
+#define AUTO_START  0
+#define AUTO_END    1
+#define AUTO_KILL   2
+#define AUTO_EVENTS 3
+#define AUTO_COMMAND_LENGTH 16
+#define LANG_LENGTH 4
+
+// commands a player can have sent automatically (gamewe_auto): the stats
+// answers of the collector, never free text
+static const char auto_commands[][] = {
+	"rank", "skill", "points", "kpd", "kdratio", "session", "sdata", "next",
+	"top5", "top10", "top20", "statsme"
+};
+
+// languages of gamewe_lang: the code a player types and the SourceMod
+// language code (languages.cfg)
+static const char lang_codes[][] = { "en", "de", "ru", "es", "fr", "pt", "nl", "dk", "da", "pl" };
+static const char lang_sm_codes[][] = { "en", "de", "ru", "es", "fr", "pt", "nl", "da", "da", "pl" };
+
 enum struct player_settings {
 	int damage_display; // 0 = off, 1 = menu, 2 = chat
 	int spectatorinfo;  // 0 = off, 1 = on
+	int console_events; // gamewe_display: 0 = off, 1 = on (default)
+	int global_chat;    // gamewe_chat: 0 = off, 1 = on (default)
+	char auto_start[AUTO_COMMAND_LENGTH]; // gamewe_auto: command at round start, "" = none
+	char auto_end[AUTO_COMMAND_LENGTH];   // at round end
+	char auto_kill[AUTO_COMMAND_LENGTH];  // when the player dies
+	char lang[LANG_LENGTH]; // gamewe_lang (SourceMod code), "" = the game's language
 	int hideranking;    // from the collector (gamewe_hidestate): 0 = shown, 1 = admin, 2 = banned, 3 = hidden by the player
 	bool hideranking_wait; // show the settings menu again when the state arrives
 	float hideranking_asked; // game time of the last request, at most one per 5 seconds
@@ -654,6 +687,8 @@ public void OnPluginStart()
 	RegServerCmd("gamewe_player_action",  gamewe_player_action, "gameWE: <userid> <action> - log a player action");
 	RegServerCmd("gamewe_team_action",    gamewe_team_action, "gameWE: <team> <action> [objective] - log a team action");
 	RegServerCmd("gamewe_world_action",   gamewe_world_action, "gameWE: <action> - log a world action");
+	RegServerCmd("gamewe_console_event",  gamewe_console_event, "gameWE: <userid[,userid...]> <message> - console line for players with gamewe_display 1");
+	RegServerCmd("gamewe_chat_event",     gamewe_chat_event, "gameWE: <userid[,userid...]> <message> - chat line for players with gamewe_chat 1");
 
 	// gameME command names, so collectors and scripts written for gameME keep working
 	RegServerCmd("gameme_raw_message",    gamewe_raw_message);
@@ -670,14 +705,26 @@ public void OnPluginStart()
 	RegServerCmd("gameme_player_action",  gamewe_player_action);
 	RegServerCmd("gameme_team_action",    gamewe_team_action);
 	RegServerCmd("gameme_world_action",   gamewe_world_action);
+	RegServerCmd("gameme_console_event",  gamewe_console_event);
+	RegServerCmd("gameme_chat_event",     gamewe_chat_event);
 
-	RegConsoleCmd("sm_gamewe_settings",  gamewe_settings_command, "gameWE: your settings (ranking, damage display, spectator info)");
+	RegConsoleCmd("sm_gamewe_settings",  gamewe_settings_command, "gameWE: your settings (ranking, console events, global chat, damage display, spectator info)");
 	RegConsoleCmd("say",                 gamewe_block_commands);
 	RegConsoleCmd("say_team",            gamewe_block_commands);
 
 	if (gamewe_plugin.mod_id == MOD_INSMOD) {
 		RegConsoleCmd("say2",            gamewe_block_commands);
 	}
+
+	// gamewe_auto: the commands players want at round start, round end and
+	// when they die; the events a game does not have are skipped
+	HookEventEx("round_start",          Event_AutoRoundStart, EventHookMode_PostNoCopy);
+	HookEventEx("teamplay_round_start", Event_AutoRoundStart, EventHookMode_PostNoCopy);
+	HookEventEx("dod_round_start",      Event_AutoRoundStart, EventHookMode_PostNoCopy);
+	HookEventEx("round_end",            Event_AutoRoundEnd, EventHookMode_PostNoCopy);
+	HookEventEx("teamplay_round_win",   Event_AutoRoundEnd, EventHookMode_PostNoCopy);
+	HookEventEx("dod_round_win",        Event_AutoRoundEnd, EventHookMode_PostNoCopy);
+	HookEventEx("player_death",         Event_AutoDeath);
 
 	RegServerCmd("log", ProtectLoggingChange);
 	RegServerCmd("logaddress_del", ProtectForwardingChange);
@@ -854,6 +901,10 @@ public void OnAllPluginsLoaded()
 	if (LibraryExists("clientprefs")) {
 		gamewe_plugin.cookie_damage_display = RegClientCookie("gamewe_damage_display", "gameWE: damage display (0 = off, 1 = menu, 2 = chat, empty = server default)", CookieAccess_Private);
 		gamewe_plugin.cookie_spectatorinfo  = RegClientCookie("gamewe_spectatorinfo", "gameWE: spectator info (0 = off, 1 = on, empty = server default)", CookieAccess_Private);
+		gamewe_plugin.cookie_console_events = RegClientCookie("gamewe_display", "gameWE: console events (0 = off, 1 or empty = on)", CookieAccess_Private);
+		gamewe_plugin.cookie_global_chat    = RegClientCookie("gamewe_chat", "gameWE: global chat events (0 = off, 1 or empty = on)", CookieAccess_Private);
+		gamewe_plugin.cookie_auto           = RegClientCookie("gamewe_auto", "gameWE: auto commands at round start, round end, death (start,end,kill)", CookieAccess_Private);
+		gamewe_plugin.cookie_lang           = RegClientCookie("gamewe_lang", "gameWE: language of the gameWE messages (en, de, ru, es, fr, pt, nl, da, pl; empty = the game's)", CookieAccess_Private);
 		gamewe_plugin.clientprefs_available = true;
 		SetCookieMenuItem(gameWESettingsMenu, 0, "gameWE Settings");
 	}
@@ -990,6 +1041,12 @@ void reset_player_settings(int client)
 	gamewe_player_settings[client].hideranking    = HIDERANKING_UNKNOWN;
 	gamewe_player_settings[client].hideranking_wait = false;
 	gamewe_player_settings[client].hideranking_asked = 0.0;
+	gamewe_player_settings[client].console_events = 1;
+	gamewe_player_settings[client].global_chat    = 1;
+	for (int i = 0; i < AUTO_EVENTS; i++) {
+		set_auto_command(client, i, "");
+	}
+	gamewe_player_settings[client].lang[0] = '\0';
 }
 
 
@@ -1020,6 +1077,113 @@ void load_player_settings(int client)
 	gamewe_player_settings[client].damage_display = parse_player_setting(value, 2);
 	GetClientCookie(client, gamewe_plugin.cookie_spectatorinfo, value, sizeof(value));
 	gamewe_player_settings[client].spectatorinfo = parse_player_setting(value, 1);
+	GetClientCookie(client, gamewe_plugin.cookie_console_events, value, sizeof(value));
+	gamewe_player_settings[client].console_events = (strcmp(value, "0") == 0) ? 0 : 1;
+	GetClientCookie(client, gamewe_plugin.cookie_global_chat, value, sizeof(value));
+	gamewe_player_settings[client].global_chat = (strcmp(value, "0") == 0) ? 0 : 1;
+
+	// "start,end,kill"; only commands of auto_commands are taken
+	char auto_value[64];
+	char parts[AUTO_EVENTS][AUTO_COMMAND_LENGTH];
+	GetClientCookie(client, gamewe_plugin.cookie_auto, auto_value, sizeof(auto_value));
+	int count = ExplodeString(auto_value, ",", parts, AUTO_EVENTS, sizeof(parts[]));
+	for (int i = 0; i < AUTO_EVENTS; i++) {
+		if ((i < count) && (auto_command_index(parts[i]) >= 0)) {
+			set_auto_command(client, i, parts[i]);
+		} else {
+			set_auto_command(client, i, "");
+		}
+	}
+
+	GetClientCookie(client, gamewe_plugin.cookie_lang, value, sizeof(value));
+	int lang_index = lang_code_index(value);
+	if (lang_index >= 0) {
+		strcopy(gamewe_player_settings[client].lang, LANG_LENGTH, lang_sm_codes[lang_index]);
+		if (IsClientInGame(client)) {
+			apply_player_language(client);
+		}
+	}
+}
+
+
+void set_auto_command(int client, int auto_event, const char[] command)
+{
+	switch (auto_event) {
+		case AUTO_START: strcopy(gamewe_player_settings[client].auto_start, AUTO_COMMAND_LENGTH, command);
+		case AUTO_END:   strcopy(gamewe_player_settings[client].auto_end, AUTO_COMMAND_LENGTH, command);
+		case AUTO_KILL:  strcopy(gamewe_player_settings[client].auto_kill, AUTO_COMMAND_LENGTH, command);
+	}
+}
+
+
+void get_auto_command(int client, int auto_event, char[] command, int maxlen)
+{
+	switch (auto_event) {
+		case AUTO_START: strcopy(command, maxlen, gamewe_player_settings[client].auto_start);
+		case AUTO_END:   strcopy(command, maxlen, gamewe_player_settings[client].auto_end);
+		case AUTO_KILL:  strcopy(command, maxlen, gamewe_player_settings[client].auto_kill);
+		default:         command[0] = '\0';
+	}
+}
+
+
+// index in auto_commands, -1 if the command cannot be an auto command
+int auto_command_index(const char[] command)
+{
+	for (int i = 0; i < sizeof(auto_commands); i++) {
+		if (StrEqual(command, auto_commands[i], false)) {
+			return i;
+		}
+	}
+	return -1;
+}
+
+
+// index in lang_codes, -1 for an unknown language
+int lang_code_index(const char[] code)
+{
+	if (code[0] == '\0') {
+		return -1;
+	}
+	for (int i = 0; i < sizeof(lang_codes); i++) {
+		if (StrEqual(code, lang_codes[i], false)) {
+			return i;
+		}
+	}
+	return -1;
+}
+
+
+// uses the player's gamewe_lang for the plugin's phrases and tells the
+// collector, which answers in it (`setup "gamewe_lang" (value "de")`)
+void apply_player_language(int client)
+{
+	if (gamewe_player_settings[client].lang[0] == '\0') {
+		return;
+	}
+	int language = GetLanguageByCode(gamewe_player_settings[client].lang);
+	if (language >= 0) {
+		SetClientLanguage(client, language);
+	}
+	log_player_settings(client, "setup", "gamewe_lang", gamewe_player_settings[client].lang);
+}
+
+
+void save_player_string(int client, Handle cookie, const char[] value)
+{
+	if ((!gamewe_plugin.clientprefs_available) || (cookie == INVALID_HANDLE) || (!AreClientCookiesCached(client))) {
+		return;
+	}
+	SetClientCookie(client, cookie, value);
+}
+
+
+void save_auto_commands(int client)
+{
+	char value[64];
+	Format(value, sizeof(value), "%s,%s,%s", gamewe_player_settings[client].auto_start,
+		gamewe_player_settings[client].auto_end, gamewe_player_settings[client].auto_kill);
+	save_player_string(client, gamewe_plugin.cookie_auto, value);
 }
 
 
@@ -1448,6 +1612,9 @@ public void OnClientPutInServer(int client)
 {
 	if (client > 0) {
 		gamewe_last_trigger[client] = 0.0;
+		for (int i = 0; i < AUTO_EVENTS; i++) {
+			gamewe_last_auto[client][i] = 0.0;
+		}
 		if (gamewe_plugin.sdkhook_available) {
 			switch (gamewe_plugin.mod_id) {
 				case MOD_HL2MP: {
@@ -5080,6 +5247,10 @@ public Action gamewe_block_commands(int client, int args)
 	}
 	strcopy(origin_command, 192, user_command[start_index]);
 
+	if (handle_player_setting(client, user_command[start_index])) {
+		// kept by the plugin; "/..." is silent, "!..." stays in chat
+		return (user_command[start_index] == '/') ? Plugin_Stop : Plugin_Continue;
+	}
 	if (is_settings_command(user_command[start_index])) {
 		// sm_gamewe_settings opens the menu; not logged, so the collector
 		// does not answer in chat as well.
@@ -5431,6 +5602,8 @@ public void CreateGameWEMenuSettings(Menu &MenuHandle)
 	SetMenuTitle(MenuHandle, "gameWE - Settings");
 
 	AddMenuItem(MenuHandle, "SettingsMenu_Ranking", "Ranking");
+	AddMenuItem(MenuHandle, "SettingsMenu_Display", "Console events");
+	AddMenuItem(MenuHandle, "SettingsMenu_Chat", "Global chat");
 	if (mod_has_damage_display()) {
 		AddMenuItem(MenuHandle, "SettingsMenu_Damage", "Damage display");
 	}
@@ -5498,6 +5671,15 @@ public int gameWESettingsCommandHandler(Menu menu, MenuAction action, int param1
 		if ((strcmp(info, "SettingsMenu_Damage") == 0) || (strcmp(info, "SettingsMenu_Spectator") == 0)) {
 			char value[128];
 			format_setting_value(param1, info, value, sizeof(value));
+			Format(buffer, sizeof(buffer), "%T", info, param1, value);
+		} else if ((strcmp(info, "SettingsMenu_Display") == 0) || (strcmp(info, "SettingsMenu_Chat") == 0)) {
+			int setting = (strcmp(info, "SettingsMenu_Chat") == 0) ? gamewe_player_settings[param1].global_chat : gamewe_player_settings[param1].console_events;
+			char value[64];
+			if (setting == 1) {
+				Format(value, sizeof(value), "%T", "SettingsValue_On", param1);
+			} else {
+				Format(value, sizeof(value), "%T", "SettingsValue_Off", param1);
+			}
 			Format(buffer, sizeof(buffer), "%T", info, param1, value);
 		} else if (strcmp(info, "SettingsMenu_Ranking") == 0) {
 			int hide_state = gamewe_player_settings[param1].hideranking;
@@ -5567,6 +5749,12 @@ public int gameWESettingsCommandHandler(Menu menu, MenuAction action, int param1
 				}
 				// the collector answers with the new state: show the menu with it
 				gamewe_player_settings[param1].hideranking_wait = sent;
+			} else if (strcmp(info, "SettingsMenu_Display") == 0) {
+				set_event_setting(param1, false, (gamewe_player_settings[param1].console_events == 1) ? "0" : "1");
+				DisplayMenuAtItem(menu, param1, GetMenuSelectionPosition(), MENU_TIME_FOREVER);
+			} else if (strcmp(info, "SettingsMenu_Chat") == 0) {
+				set_event_setting(param1, true, (gamewe_player_settings[param1].global_chat == 1) ? "0" : "1");
+				DisplayMenuAtItem(menu, param1, GetMenuSelectionPosition(), MENU_TIME_FOREVER);
 			} else if ((strcmp(info, "SettingsMenu_Damage") == 0) && (gamewe_plugin.damage_display == 1)) {
 				// server default -> off -> menu -> chat -> server default
 				int setting = gamewe_player_settings[param1].damage_display;
@@ -5601,6 +5789,273 @@ public void CreateGameWEMenuEvents(Menu &MenuHandle)
 	AddMenuItem(MenuHandle, "ConsoleMenu_Menu4", "Disable Global Chat");
 
 	SetMenuPagination(MenuHandle, 8);
+}
+
+
+// a chat line of the plugin to one player in the player's language, with
+// the message prefix (or the [gameWE] tag)
+void reply_phrase(int client, const char[] format, any ...)
+{
+	char message[192];
+	SetGlobalTransTarget(client);
+	VFormat(message, sizeof(message), format, 3);
+	char line[256];
+	Format(line, sizeof(line), "%s %s", GAMEWE_CHAT_TAG, message);
+	apply_message_prefix(line, sizeof(line));
+	csgo_chat_start(line, sizeof(line));
+	PrintToChat(client, "%s", line);
+}
+
+
+// gamewe_display, gamewe_chat, gamewe_auto and gamewe_lang (also with
+// gameme_): settings the plugin keeps itself (clientprefs cookies), not sent
+// to the collector. true if text is one of them.
+bool handle_player_setting(int client, const char[] text)
+{
+	char words[3][64];
+	int count = ExplodeString(text, " ", words, sizeof(words), sizeof(words[]));
+	char first[64];
+	strcopy(first, sizeof(first), words[0]);
+	int start = ((first[0] == '/') || (first[0] == '!')) ? 1 : 0;
+	if ((strncmp(first[start], "gamewe_", 7, false) != 0) && (strncmp(first[start], "gameme_", 7, false) != 0)) {
+		return false;
+	}
+	char name[32];
+	strcopy(name, sizeof(name), first[start + 7]);
+	if (!StrEqual(name, "display", false) && !StrEqual(name, "chat", false) && !StrEqual(name, "auto", false) && !StrEqual(name, "lang", false)) {
+		return false;
+	}
+	// every change writes a cookie (and gamewe_lang a log line): at most one
+	// per gamewe_chat_cooldown
+	if (!gamewe_trigger_allowed(client)) {
+		return true;
+	}
+	char argument[64], argument2[64];
+	if (count > 1) {
+		strcopy(argument, sizeof(argument), words[1]);
+	}
+	if (count > 2) {
+		strcopy(argument2, sizeof(argument2), words[2]);
+	}
+	if (StrEqual(name, "display", false)) {
+		set_event_setting(client, false, argument);
+	} else if (StrEqual(name, "chat", false)) {
+		set_event_setting(client, true, argument);
+	} else if (StrEqual(name, "auto", false)) {
+		player_auto_command(client, argument, argument2);
+	} else {
+		player_language(client, argument);
+	}
+	return true;
+}
+
+
+// gamewe_display 0|1 (console events) or gamewe_chat 0|1 (global chat)
+void set_event_setting(int client, bool chat, const char[] value)
+{
+	int setting;
+	if (StrEqual(value, "1") || StrEqual(value, "on", false)) {
+		setting = 1;
+	} else if (StrEqual(value, "0") || StrEqual(value, "off", false)) {
+		setting = 0;
+	} else {
+		if (chat) {
+			reply_phrase(client, "%t", "Chat_OnOffUsage", "gamewe_chat");
+		} else {
+			reply_phrase(client, "%t", "Chat_OnOffUsage", "gamewe_display");
+		}
+		return;
+	}
+	if (chat) {
+		gamewe_player_settings[client].global_chat = setting;
+		save_player_setting(client, gamewe_plugin.cookie_global_chat, setting);
+		if (setting == 1) {
+			reply_phrase(client, "%t", "Chat_ChatOn");
+		} else {
+			reply_phrase(client, "%t", "Chat_ChatOff");
+		}
+	} else {
+		gamewe_player_settings[client].console_events = setting;
+		save_player_setting(client, gamewe_plugin.cookie_console_events, setting);
+		if (setting == 1) {
+			reply_phrase(client, "%t", "Chat_DisplayOn");
+		} else {
+			reply_phrase(client, "%t", "Chat_DisplayOff");
+		}
+	}
+}
+
+
+// phrases of the auto events, by AUTO_START, AUTO_END, AUTO_KILL
+static const char auto_event_phrases[][] = { "Auto_Start", "Auto_End", "Auto_Kill" };
+
+// name of an auto event in the player's language
+void format_auto_event(int client, int auto_event, char[] buffer, int maxlen)
+{
+	Format(buffer, maxlen, "%T", auto_event_phrases[auto_event], client);
+}
+
+
+// gamewe_auto clear | gamewe_auto start|end|kill [<command>|clear]
+void player_auto_command(int client, const char[] type, const char[] command)
+{
+	if (StrEqual(type, "clear", false)) {
+		for (int i = 0; i < AUTO_EVENTS; i++) {
+			set_auto_command(client, i, "");
+		}
+		save_auto_commands(client);
+		reply_phrase(client, "%t", "Auto_Cleared");
+		return;
+	}
+	int auto_event = -1;
+	if (StrEqual(type, "start", false)) {
+		auto_event = AUTO_START;
+	} else if (StrEqual(type, "end", false)) {
+		auto_event = AUTO_END;
+	} else if (StrEqual(type, "kill", false)) {
+		auto_event = AUTO_KILL;
+	}
+	if (auto_event < 0) {
+		char none[32], current[AUTO_EVENTS][AUTO_COMMAND_LENGTH];
+		Format(none, sizeof(none), "%T", "SettingsValue_Off", client);
+		for (int i = 0; i < AUTO_EVENTS; i++) {
+			get_auto_command(client, i, current[i], sizeof(current[]));
+			if (current[i][0] == '\0') {
+				strcopy(current[i], sizeof(current[]), none);
+			}
+		}
+		reply_phrase(client, "%t", "Auto_List", current[AUTO_START], current[AUTO_END], current[AUTO_KILL]);
+		reply_phrase(client, "%t", "Auto_Usage");
+		return;
+	}
+	char event_name[64];
+	format_auto_event(client, auto_event, event_name, sizeof(event_name));
+	if ((command[0] == '\0') || StrEqual(command, "clear", false)) {
+		set_auto_command(client, auto_event, "");
+		save_auto_commands(client);
+		reply_phrase(client, "%t", "Auto_Removed", event_name);
+		return;
+	}
+	int index = auto_command_index(command);
+	if (index < 0) {
+		reply_phrase(client, "%t", "Auto_Unknown", command);
+		reply_phrase(client, "%t", "Auto_Usage");
+		return;
+	}
+	set_auto_command(client, auto_event, auto_commands[index]);
+	save_auto_commands(client);
+	reply_phrase(client, "%t", "Auto_Set", event_name, auto_commands[index]);
+}
+
+
+// gamewe_lang <code>: the language of the plugin's and the collector's messages
+void player_language(int client, const char[] code)
+{
+	int index = lang_code_index(code);
+	if (index < 0) {
+		reply_phrase(client, "%t", "Lang_Usage");
+		return;
+	}
+	strcopy(gamewe_player_settings[client].lang, LANG_LENGTH, lang_sm_codes[index]);
+	save_player_string(client, gamewe_plugin.cookie_lang, lang_sm_codes[index]);
+	apply_player_language(client);
+	reply_phrase(client, "%t", "Lang_Set", lang_codes[index]);
+}
+
+
+// sends the players' auto command of the event (only_client: just that player)
+void run_auto_commands(int auto_event, int only_client = 0)
+{
+	float now = GetGameTime();
+	for (int client = 1; client <= MaxClients; client++) {
+		if (((only_client > 0) && (client != only_client)) || !IsClientInGame(client) || IsFakeClient(client)) {
+			continue;
+		}
+		char command[AUTO_COMMAND_LENGTH];
+		get_auto_command(client, auto_event, command, sizeof(command));
+		float last = gamewe_last_auto[client][auto_event];
+		if ((command[0] == '\0') || ((last > 0.0) && (now >= last) && ((now - last) < 2.0))) {
+			continue;
+		}
+		gamewe_last_auto[client][auto_event] = now;
+		char player_command[192];
+		Format(player_command, sizeof(player_command), "/%s", command);
+		make_player_command(client, player_command);
+	}
+}
+
+
+public void Event_AutoRoundStart(Event event, const char[] name, bool dontBroadcast)
+{
+	run_auto_commands(AUTO_START);
+}
+
+
+public void Event_AutoRoundEnd(Event event, const char[] name, bool dontBroadcast)
+{
+	run_auto_commands(AUTO_END);
+}
+
+
+public void Event_AutoDeath(Event event, const char[] name, bool dontBroadcast)
+{
+	int victim = GetClientOfUserId(event.GetInt("userid"));
+	if (victim > 0) {
+		run_auto_commands(AUTO_KILL, victim);
+	}
+}
+
+
+// gamewe_console_event / gamewe_chat_event <userid[,userid...]> <message>:
+// the collector's points of kills and actions, shown only to the listed
+// players whose gamewe_display (console) or gamewe_chat (chat) is on
+Action send_player_event(int args, bool chat)
+{
+	if (args < 2) {
+		if (chat) {
+			PrintToServer("Usage: gamewe_chat_event <userid[,userid...]> <message> - chat line for players with gamewe_chat 1");
+		} else {
+			PrintToServer("Usage: gamewe_console_event <userid[,userid...]> <message> - console line for players with gamewe_display 1");
+		}
+		return Plugin_Handled;
+	}
+	char ids[512];
+	GetCmdArg(1, ids, sizeof(ids));
+	char message[192];
+	get_cmd_message(1, message, sizeof(message));
+	if (message[0] == '\0') {
+		return Plugin_Handled;
+	}
+	if (chat) {
+		apply_message_prefix(message, sizeof(message));
+		csgo_chat_start(message, sizeof(message));
+	}
+	char parts[MAXPLAYERS + 1][16];
+	int count = ExplodeString(ids, ",", parts, sizeof(parts), sizeof(parts[]));
+	for (int i = 0; i < count; i++) {
+		int client = GetClientOfUserId(StringToInt(parts[i]));
+		if ((client < 1) || !IsClientInGame(client) || IsFakeClient(client)) {
+			continue;
+		}
+		if (chat && (gamewe_player_settings[client].global_chat == 1)) {
+			PrintToChat(client, "%s", message);
+		} else if (!chat && (gamewe_player_settings[client].console_events == 1)) {
+			PrintToConsole(client, "%s %s", GAMEWE_CHAT_TAG, message);
+		}
+	}
+	return Plugin_Handled;
+}
+
+
+public Action gamewe_console_event(int args)
+{
+	return send_player_event(args, false);
+}
+
+
+public Action gamewe_chat_event(int args)
+{
+	return send_player_event(args, true);
 }
 
 
@@ -5716,13 +6171,13 @@ public int gameWEEventsCommandHandler(Menu menu, MenuAction action, int param1, 
 		if (IsClientInGame(param1)) {
 			switch (param2) {
 				case 0 :
-					make_player_command(param1, "/gamewe_display 1");
+					set_event_setting(param1, false, "1");
 				case 1 :
-					make_player_command(param1, "/gamewe_display 0");
+					set_event_setting(param1, false, "0");
 				case 2 :
-					make_player_command(param1, "/gamewe_chat 1");
+					set_event_setting(param1, true, "1");
 				case 3 :
-					make_player_command(param1, "/gamewe_chat 0");
+					set_event_setting(param1, true, "0");
 			}
 		}
 	}

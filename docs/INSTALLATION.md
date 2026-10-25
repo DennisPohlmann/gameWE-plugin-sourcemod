@@ -62,7 +62,7 @@ The server log shows the result after the start: `gameWE Game Detection: ...`.
    addons/sourcemod/plugins/gamewe.smx                     the plugin
    addons/sourcemod/plugins/disabled/gamewe_messages.smx   example for plugin developers (not loaded)
    addons/sourcemod/translations/gamewe.phrases.txt        English
-   addons/sourcemod/translations/<lang>/gamewe.phrases.txt da, de, es, fr, pl, pt, ru
+   addons/sourcemod/translations/<lang>/gamewe.phrases.txt da, de, es, fr, nl, pl, pt, ru
    addons/sourcemod/scripting/gamewe.sp, gamewe_messages.sp, include/gamewe.inc   source (optional, not needed to run)
    README.md, CHANGELOG.md, LICENSE                        (can be deleted from the game folder)
    ```

@@ -176,4 +176,76 @@
 	{
 		"es"		"desactivado por el servidor"
 	}
+	"SettingsMenu_Display"
+	{
+		"es"		"Eventos en consola: {1}"
+	}
+	"SettingsMenu_Chat"
+	{
+		"es"		"Chat global: {1}"
+	}
+	"Chat_OnOffUsage"
+	{
+		"es"		"Usa {1} 1 (activar) o {1} 0 (desactivar)."
+	}
+	"Chat_DisplayOn"
+	{
+		"es"		"Eventos en consola activados: los puntos de tus bajas y acciones aparecen en la consola."
+	}
+	"Chat_DisplayOff"
+	{
+		"es"		"Eventos en consola desactivados."
+	}
+	"Chat_ChatOn"
+	{
+		"es"		"Eventos del chat global activados."
+	}
+	"Chat_ChatOff"
+	{
+		"es"		"Eventos del chat global desactivados."
+	}
+	"Auto_Start"
+	{
+		"es"		"inicio de ronda"
+	}
+	"Auto_End"
+	{
+		"es"		"fin de ronda"
+	}
+	"Auto_Kill"
+	{
+		"es"		"tu muerte"
+	}
+	"Auto_Set"
+	{
+		"es"		"Ahora se envía {2} por ti en: {1}."
+	}
+	"Auto_Removed"
+	{
+		"es"		"Ya no hay comando automático en: {1}."
+	}
+	"Auto_Cleared"
+	{
+		"es"		"Tus comandos automáticos se han borrado."
+	}
+	"Auto_List"
+	{
+		"es"		"Comandos automáticos: inicio de ronda {1}, fin de ronda {2}, muerte {3}."
+	}
+	"Auto_Usage"
+	{
+		"es"		"Usa gamewe_auto start|end|kill <comando> o gamewe_auto clear. Comandos: rank, kpd, session, next, top5, top10, top20, statsme"
+	}
+	"Auto_Unknown"
+	{
+		"es"		"{1} no puede ser un comando automático."
+	}
+	"Lang_Set"
+	{
+		"es"		"Idioma: {1}."
+	}
+	"Lang_Usage"
+	{
+		"es"		"Usa gamewe_lang en, de, ru, es, fr, pt, nl, dk o pl."
+	}
 }

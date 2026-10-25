@@ -176,4 +176,76 @@
 	{
 		"pt"		"desativado pelo servidor"
 	}
+	"SettingsMenu_Display"
+	{
+		"pt"		"Eventos no console: {1}"
+	}
+	"SettingsMenu_Chat"
+	{
+		"pt"		"Chat global: {1}"
+	}
+	"Chat_OnOffUsage"
+	{
+		"pt"		"Use {1} 1 (ligado) ou {1} 0 (desligado)."
+	}
+	"Chat_DisplayOn"
+	{
+		"pt"		"Eventos no console ligados: os pontos dos seus abates e ações aparecem no console."
+	}
+	"Chat_DisplayOff"
+	{
+		"pt"		"Eventos no console desligados."
+	}
+	"Chat_ChatOn"
+	{
+		"pt"		"Eventos do chat global ligados."
+	}
+	"Chat_ChatOff"
+	{
+		"pt"		"Eventos do chat global desligados."
+	}
+	"Auto_Start"
+	{
+		"pt"		"início da rodada"
+	}
+	"Auto_End"
+	{
+		"pt"		"fim da rodada"
+	}
+	"Auto_Kill"
+	{
+		"pt"		"sua morte"
+	}
+	"Auto_Set"
+	{
+		"pt"		"{2} agora é enviado por você em: {1}."
+	}
+	"Auto_Removed"
+	{
+		"pt"		"Não há mais comando automático em: {1}."
+	}
+	"Auto_Cleared"
+	{
+		"pt"		"Seus comandos automáticos foram apagados."
+	}
+	"Auto_List"
+	{
+		"pt"		"Comandos automáticos: início da rodada {1}, fim da rodada {2}, morte {3}."
+	}
+	"Auto_Usage"
+	{
+		"pt"		"Use gamewe_auto start|end|kill <comando> ou gamewe_auto clear. Comandos: rank, kpd, session, next, top5, top10, top20, statsme"
+	}
+	"Auto_Unknown"
+	{
+		"pt"		"{1} não pode ser um comando automático."
+	}
+	"Lang_Set"
+	{
+		"pt"		"Idioma: {1}."
+	}
+	"Lang_Usage"
+	{
+		"pt"		"Use gamewe_lang en, de, ru, es, fr, pt, nl, dk ou pl."
+	}
 }

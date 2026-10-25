@@ -1,0 +1,244 @@
+"Phrases"
+{
+
+	"IngameMenu_Caption"
+	{
+		"nl"		"gameWE - Hoofdmenu"
+	}
+	"IngameMenu_Menu1"
+	{
+		"nl"		"Eigen rang"
+	}
+	"IngameMenu_Menu2"
+	{
+		"nl"		"Volgende spelers"
+	}
+	"IngameMenu_Menu3"
+	{
+		"nl"		"Top10-spelers"
+	}
+	"IngameMenu_Menu5"
+	{
+		"nl"		"Chatgebeurtenissen"
+	}
+	"IngameMenu_Menu7"
+	{
+		"nl"		"Clanranglijst"
+	}
+	"IngameMenu_Menu8"
+	{
+		"nl"		"Serverstatus"
+	}
+	"IngameMenu_Menu9"
+	{
+		"nl"		"Statsme"
+	}
+	"IngameMenu_Menu10"
+	{
+		"nl"		"Wapengebruik"
+	}
+	"IngameMenu_Menu11"
+	{
+		"nl"		"Wapennauwkeurigheid"
+	}
+	"IngameMenu_Menu12"
+	{
+		"nl"		"Wapendoelen"
+	}
+	"IngameMenu_Menu13"
+	{
+		"nl"		"Kills per speler"
+	}
+	"IngameMenu_Menu14"
+	{
+		"nl"		"Banlijst"
+	}
+	"IngameMenu_Menu15"
+	{
+		"nl"		"Help tonen"
+	}
+	"ConsoleMenu_Caption"
+	{
+		"nl"		"gameWE - Chatgebeurtenissen"
+	}
+	"ConsoleMenu_Menu1"
+	{
+		"nl"		"Gebeurtenissen aan"
+	}
+	"ConsoleMenu_Menu2"
+	{
+		"nl"		"Gebeurtenissen uit"
+	}
+	"ConsoleMenu_Menu3"
+	{
+		"nl"		"Globale chat aan"
+	}
+	"ConsoleMenu_Menu4"
+	{
+		"nl"		"Globale chat uit"
+	}
+	"DamagePanel_Attackers"
+	{
+		"nl"		"Aanvallers"
+	}
+	"DamagePanel_Killed"
+	{
+		"nl"		"Gedood"
+	}
+	"DamagePanel_Wounded"
+	{
+		"nl"		"Verwond"
+	}
+	"DamagePanel_Killer"
+	{
+		"nl"		"Moordenaar"
+	}
+	"DamagePanel_Dmg"
+	{
+		"nl"		"schade"
+	}
+	"DamagePanel_Hit"
+	{
+		"nl"		"treffer"
+	}
+	"DamagePanel_Hits"
+	{
+		"nl"		"treffers"
+	}
+	"DamagePanel_Hp"
+	{
+		"nl"		"hp"
+	}
+	"DamageChat_Killedyou"
+	{
+		"nl"		"{1} heeft je gedood met {2} schade, {3} hp over"
+	}
+	"IngameMenu_Menu17"
+	{
+		"nl"		"Instellingen"
+	}
+	"SettingsMenu_Caption"
+	{
+		"nl"		"gameWE - Instellingen"
+	}
+	"SettingsMenu_Hide"
+	{
+		"nl"		"Verberg mij in de ranglijst"
+	}
+	"SettingsMenu_Show"
+	{
+		"nl"		"Toon mij in de ranglijst"
+	}
+	"SettingsMenu_Ranking"
+	{
+		"nl"		"Verberg of toon mij in de ranglijst"
+	}
+	"SettingsMenu_RankingLocked"
+	{
+		"nl"		"Verborgen in de ranglijst (alleen een admin kan dit wijzigen)"
+	}
+	"SettingsMenu_Damage"
+	{
+		"nl"		"Schadeweergave: {1}"
+	}
+	"SettingsMenu_Spectator"
+	{
+		"nl"		"Toeschouwersinfo: {1}"
+	}
+	"SettingsValue_Default"
+	{
+		"nl"		"serverstandaard ({1})"
+	}
+	"SettingsValue_Off"
+	{
+		"nl"		"uit"
+	}
+	"SettingsValue_On"
+	{
+		"nl"		"aan"
+	}
+	"SettingsValue_Menu"
+	{
+		"nl"		"menu"
+	}
+	"SettingsValue_Chat"
+	{
+		"nl"		"chat"
+	}
+	"SettingsValue_Disabled"
+	{
+		"nl"		"uitgeschakeld door de server"
+	}
+	"SettingsMenu_Display"
+	{
+		"nl"		"Console-gebeurtenissen: {1}"
+	}
+	"SettingsMenu_Chat"
+	{
+		"nl"		"Globale chat: {1}"
+	}
+	"Chat_OnOffUsage"
+	{
+		"nl"		"Gebruik {1} 1 (aan) of {1} 0 (uit)."
+	}
+	"Chat_DisplayOn"
+	{
+		"nl"		"Console-gebeurtenissen aan: de punten van je kills en acties staan in de console."
+	}
+	"Chat_DisplayOff"
+	{
+		"nl"		"Console-gebeurtenissen uit."
+	}
+	"Chat_ChatOn"
+	{
+		"nl"		"Globale chatgebeurtenissen aan."
+	}
+	"Chat_ChatOff"
+	{
+		"nl"		"Globale chatgebeurtenissen uit."
+	}
+	"Auto_Start"
+	{
+		"nl"		"rondestart"
+	}
+	"Auto_End"
+	{
+		"nl"		"ronde-einde"
+	}
+	"Auto_Kill"
+	{
+		"nl"		"je dood"
+	}
+	"Auto_Set"
+	{
+		"nl"		"{2} wordt nu voor je verstuurd bij: {1}."
+	}
+	"Auto_Removed"
+	{
+		"nl"		"Geen automatisch commando meer bij: {1}."
+	}
+	"Auto_Cleared"
+	{
+		"nl"		"Je automatische commando's zijn gewist."
+	}
+	"Auto_List"
+	{
+		"nl"		"Automatische commando's: rondestart {1}, ronde-einde {2}, dood {3}."
+	}
+	"Auto_Usage"
+	{
+		"nl"		"Gebruik gamewe_auto start|end|kill <commando> of gamewe_auto clear. Commando's: rank, kpd, session, next, top5, top10, top20, statsme"
+	}
+	"Auto_Unknown"
+	{
+		"nl"		"{1} kan geen automatisch commando zijn."
+	}
+	"Lang_Set"
+	{
+		"nl"		"Taal: {1}."
+	}
+	"Lang_Usage"
+	{
+		"nl"		"Gebruik gamewe_lang en, de, ru, es, fr, pt, nl, dk of pl."
+	}
+}

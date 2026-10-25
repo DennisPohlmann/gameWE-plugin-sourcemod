@@ -38,9 +38,18 @@ not chosen (or chose "server default"), so `0` means "off by default, players
 can switch it on". To forbid a display completely, set its `*_allow` ConVar to
 `0`; the menu then shows the entry as disabled.
 
-The choices are saved with ClientPrefs cookies (`gamewe_damage_display`,
-`gamewe_spectatorinfo`, private, value `0`/`1`/`2`; empty means server default),
-so they are kept across maps and visits. Without ClientPrefs the menu still
+The players also choose the collector's console events and global chat
+events (`gamewe_display 0|1`, `gamewe_chat 0|1`, on by default; the
+collector's `gamewe_console_events` / `gamewe_global_chat` decide whether
+there are any), their auto commands (`gamewe_auto`) and their language
+(`gamewe_lang`), see [USAGE.md](USAGE.md#settings-the-plugin-keeps).
+
+The choices are saved with ClientPrefs cookies, all private:
+`gamewe_damage_display` and `gamewe_spectatorinfo` (value `0`/`1`/`2`; empty
+means server default), `gamewe_display` and `gamewe_chat` (`0` off, `1` or
+empty on), `gamewe_auto` (`<start>,<end>,<kill>`, each a command of the
+allowed list or empty) and `gamewe_lang` (a SourceMod language code, empty =
+the game's language), so they are kept across maps and visits. Without ClientPrefs the menu still
 works, but a choice is lost on reconnect or map change. Logging, the collector
 address, blocked commands, the message prefix and the chat cooldown stay server
 settings.

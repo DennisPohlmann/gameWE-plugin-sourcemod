@@ -18,6 +18,10 @@ server and works together with the
 - shows the gameWE menu (`!gamewe`), a damage summary on death and the stats of
   the spectated player; every player chooses these displays in the gameWE
   settings menu, `gamewe.cfg` only sets the default,
+- keeps the players' own settings of gameME's commands: console and chat
+  events (`gamewe_display`, `gamewe_chat`), auto commands at round start,
+  round end and death (`gamewe_auto`) and the language (`gamewe_lang`, 9
+  languages, also for the collector's answers),
 - gives other plugins access to the statistics through natives and forwards.
 
 It is the original gameME plugin 5.0.0, ported to current SourcePawn and

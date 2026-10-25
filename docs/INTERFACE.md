@@ -15,6 +15,8 @@ The plugin writes standard HL log lines. The ones the collector uses most:
 "Name<2><STEAM_1:0:123><CT>" triggered "mvp"
 "Name<2><STEAM_1:0:123><CT>" say "!rank"
 "Name<2><STEAM_1:0:123><CT>" requested "hideranking" (value "0")
+"Name<2><STEAM_1:0:123><CT>" setup "cl_language" (value "german")
+"Name<2><STEAM_1:0:123><CT>" setup "gamewe_lang" (value "de")
 ```
 
 `weaponstats` lines are written when a player dies, disconnects or the round
@@ -22,7 +24,11 @@ ends (on L4D, L4D2 and Insurgency also every 180 seconds). `weaponstats2` follow
 when the weapon hit something. TF2 writes `weaponstats` without `weaponstats2`.
 `requested "hideranking"` asks the collector for the player's ranking state
 when the settings menu opens and the state is not known yet; the collector
-answers with `gamewe_hidestate`.
+answers with `gamewe_hidestate`. `setup "gamewe_lang"` is the player's
+language choice (`gamewe_lang`: `en`, `de`, `ru`, `es`, `fr`, `pt`, `nl`, `da`,
+`pl`), logged when the player chooses and whenever the player is put in the
+server; `setup "cl_language"` is the game's language, queried on connect. The
+collector answers in that language.
 
 ## Server commands
 
@@ -46,6 +52,8 @@ arguments, so it may contain spaces. `\n` in a message (backslash, n) is a line 
 | `gamewe_team_action <team> <action> [objective]` | Logs a team action. |
 | `gamewe_world_action <action>` | Logs a world action. |
 | `gamewe_hidestate <userid> <hideranking>` | The player's ranking state for the settings menu: `0` shown, `1` hidden by an admin, `2` banned, `3` hidden by the player. Sent by the collector after `!hideranking` / `!settings` and for `requested "hideranking"`. |
+| `gamewe_console_event <userid[,userid...]> "<message>"` | A console line for the listed players whose console events are on (`gamewe_display`): the collector's points of kills and actions. |
+| `gamewe_chat_event <userid[,userid...]> "<message>"` | A chat line (with the message prefix) for the listed players whose global chat is on (`gamewe_chat`): the collector's announcements of actions with points. |
 | `gamewe_raw_message <type> <query_id> <userid> ...` | Data for other plugins, see below. |
 
 Every command also exists with the `gameme_` prefix, so a collector or script
