@@ -44,7 +44,7 @@
 
 // plugin information
 #if !defined GAMEWE_PLUGIN_VERSION
-#define GAMEWE_PLUGIN_VERSION "0.2.0"
+#define GAMEWE_PLUGIN_VERSION "0.2.1"
 #endif
 public Plugin myinfo = {
 	name = "gameWE",
