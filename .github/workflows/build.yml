@@ -6,9 +6,12 @@ name: build
 # it bumps the version files, writes CHANGELOG.md, commits that as
 # "chore(release): vX.Y.Z [skip ci]", tags vX.Y.Z and creates the GitHub
 # release; publish then builds that tag with SourceMod 1.12 (stable) and adds
-# the packages to the release. A manual run builds without publishing.
+# the packages to the release. A manual run or a pull request (e.g. from
+# Dependabot) builds without publishing.
 on:
   push:
+    branches: [main]
+  pull_request:
     branches: [main]
   workflow_dispatch:
 
