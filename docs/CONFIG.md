@@ -4,6 +4,10 @@ All settings are ConVars in `cfg/sourcemod/gamewe.cfg`. SourceMod writes the
 file with all settings and their defaults on the first start and never changes
 it afterwards: a setting added in a later version works with its default until
 you add its line yourself (or delete the file once to have it written again).
+The same holds for the comments above each line: the allowed range
+(`Minimum`/`Maximum`) of a setting only shows up in a file written by a
+version that has it, so delete the file once after an update to get the
+current descriptions and ranges. Values outside the range are clamped.
 
 ## ConVars
 
@@ -13,7 +17,7 @@ you add its line yourself (or delete the file once to have it written again).
 | `gamewe_block_commands_values` | | More commands that are silent when typed with `/`, separated by spaces; `clear` removes all, including the defaults |
 | `gamewe_message_prefix` | | Text in front of every gameWE message (color tags allowed); `gamewe_message_prefix_clear` empties it |
 | `gamewe_protect_address` | | `ip:port` of the collector to keep registered |
-| `gamewe_log_locations` | `1` | Log player positions with kills and actions (heatmaps) |
+| `gamewe_log_locations` | `1` | Log player positions with kills and actions (heatmaps): `0` off, `1` on |
 | `gamewe_display_spectatorinfo` | `0` | CS:S, CS:GO: default for players: show the stats of the spectated player (`0` off, `1` on); each player can override it in the settings menu |
 | `gamewe_display_spectatorinfo_allow` | `1` | `0` switches the spectator info off for everyone; players cannot enable it then |
 | `gamewe_damage_display` | `0` | CS:S, CS:GO, DoD:S: default for players: damage summary on death and at round end (`0` off, `1` menu, `2` chat); each player can override it in the settings menu |

@@ -610,8 +610,8 @@ public void OnPluginStart()
 	HookConVarChange(gamewe_plugin.message_prefix, OnMessagePrefixChange);
 	gamewe_plugin.protect_address = CreateConVar("gamewe_protect_address", "", "Address to be protected for logging/forwarding");
 	HookConVarChange(gamewe_plugin.protect_address, OnProtectAddressChange);
-	gamewe_plugin.chat_cooldown = CreateConVar("gamewe_chat_cooldown", "1.0", "Seconds a player has to wait between two logged gameWE commands (0 = off)", FCVAR_NONE, true, 0.0, true, 30.0);
-	gamewe_plugin.enable_log_locations = CreateConVar("gamewe_log_locations", "1", "If activated the gameserver logs players locations");
+	gamewe_plugin.chat_cooldown = CreateConVar("gamewe_chat_cooldown", "1.0", "Seconds a player has to wait between two logged gameWE commands (0-30, 0 = off)", FCVAR_NONE, true, 0.0, true, 30.0);
+	gamewe_plugin.enable_log_locations = CreateConVar("gamewe_log_locations", "1", "Log player positions with kills and actions for the heatmaps (0 = off, 1 = on)", FCVAR_NONE, true, 0.0, true, 1.0);
 	HookConVarChange(gamewe_plugin.enable_log_locations, OnLogLocationsChange);
 	gamewe_plugin.display_spectatorinfo = CreateConVar("gamewe_display_spectatorinfo", "0", "Default for players: display gameWE Stats data while spectating a player (0 = off, 1 = on); players can change it in the gameWE settings menu", FCVAR_NONE, true, 0.0, true, 1.0);
 	gamewe_plugin.allow_spectatorinfo = CreateConVar("gamewe_display_spectatorinfo_allow", "1", "Allow the spectator info at all (0 = off for everyone, players cannot enable it)", FCVAR_NONE, true, 0.0, true, 1.0);
