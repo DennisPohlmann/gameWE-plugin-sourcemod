@@ -42,6 +42,7 @@ the game server, `change-me` your RCON password.
 | Left 4 Dead, Left 4 Dead 2 | `L4D`, `L4DII` |
 | Insurgency (2014) | `INSMOD` |
 | Fortress Forever, CSPromod, Zombie Panic! Source | `FF`, `CSP`, `ZPS` |
+| Fistful of Frags, No More Room in Hell | `FOF`, `NMRIH` |
 
 The server log shows the result after the start: `gameWE Game Detection: ...`.
 

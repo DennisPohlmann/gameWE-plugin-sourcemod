@@ -67,6 +67,8 @@ public Plugin myinfo = {
 #define MOD_CSP 9
 #define MOD_ZPS 10
 #define MOD_CSGO 11
+#define MOD_FOF 12
+#define MOD_NMRIH 13
 
 char team_list[16][32];
 
@@ -1288,7 +1290,7 @@ public void OnMapStart()
 
 	if ((gamewe_plugin.mod_id == MOD_CSGO) || (gamewe_plugin.mod_id == MOD_CSS) || (gamewe_plugin.mod_id == MOD_TF2) || (gamewe_plugin.mod_id == MOD_DODS) || (gamewe_plugin.mod_id == MOD_HL2MP) ||
 	    (gamewe_plugin.mod_id == MOD_INSMOD) || (gamewe_plugin.mod_id == MOD_FF) || (gamewe_plugin.mod_id == MOD_L4D) || (gamewe_plugin.mod_id == MOD_L4DII) ||
-	    (gamewe_plugin.mod_id == MOD_CSP)) {
+	    (gamewe_plugin.mod_id == MOD_CSP) || (gamewe_plugin.mod_id == MOD_FOF)) {
 
 		char map_name[64];
 		GetCurrentMap(map_name, 64);
@@ -1384,6 +1386,14 @@ void get_server_mod()
 				strcopy(gamewe_plugin.game_mod, 32, "ZPS");
 				gamewe_plugin.mod_id = MOD_ZPS;
 			}
+			if (StrContains(game_description, "Fistful of Frags", false) != -1) {
+				strcopy(gamewe_plugin.game_mod, 32, "FOF");
+				gamewe_plugin.mod_id = MOD_FOF;
+			}
+			if (StrContains(game_description, "No More Room in Hell", false) != -1) {
+				strcopy(gamewe_plugin.game_mod, 32, "NMRIH");
+				gamewe_plugin.mod_id = MOD_NMRIH;
+			}
 
 		}
 
@@ -1435,6 +1445,14 @@ void get_server_mod()
 			if (StrContains(game_folder, "zps", false) != -1) {
 				strcopy(gamewe_plugin.game_mod, 32, "ZPS");
 				gamewe_plugin.mod_id = MOD_ZPS;
+			}
+			if (strcmp(game_folder, "fof", false) == 0) {
+				strcopy(gamewe_plugin.game_mod, 32, "FOF");
+				gamewe_plugin.mod_id = MOD_FOF;
+			}
+			if (StrContains(game_folder, "nmrih", false) != -1) {
+				strcopy(gamewe_plugin.game_mod, 32, "NMRIH");
+				gamewe_plugin.mod_id = MOD_NMRIH;
 			}
 			if (strcmp(gamewe_plugin.game_mod, "") == 0) {
 				LogToGame("gameWE Game Detection: Failed (%s, %s)", game_description, game_folder);

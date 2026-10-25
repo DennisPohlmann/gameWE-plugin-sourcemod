@@ -50,6 +50,7 @@ Current version: see `VERSION` and [CHANGELOG.md](CHANGELOG.md).
 | Left 4 Dead, Left 4 Dead 2 | `L4D`, `L4DII` |
 | Insurgency (2014) | `INSMOD` |
 | Fortress Forever, CSPromod, Zombie Panic! Source | `FF`, `CSP`, `ZPS` |
+| Fistful of Frags, No More Room in Hell | `FOF`, `NMRIH` |
 
 The game is detected from the engine version, and from the game name and folder
 for mods. The result is in the log: `gameWE Game Detection: ...`.
