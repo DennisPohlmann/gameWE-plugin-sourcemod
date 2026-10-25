@@ -131,6 +131,14 @@
 	{
 		"da"		"Vis mig på ranglisten"
 	}
+	"SettingsMenu_Ranking"
+	{
+		"da"		"Skjul eller vis mig på ranglisten"
+	}
+	"SettingsMenu_RankingLocked"
+	{
+		"da"		"Skjult på ranglisten (kun en admin kan ændre det)"
+	}
 	"SettingsMenu_Damage"
 	{
 		"da"		"Skadesvisning: {1}"

@@ -15,7 +15,7 @@ current descriptions and ranges. Values outside the range are clamped.
 |--------|---------|---------|
 | `gamewe_chat_cooldown` | `1.0` | Seconds between two gameWE commands of one player that are passed to the collector (silent `/` commands and menu entries), 0-30, `0` = off |
 | `gamewe_block_commands_values` | | More commands that are silent when typed with `/`, separated by spaces; `clear` removes all, including the defaults |
-| `gamewe_message_prefix` | | Text in front of every gameWE message (color tags allowed); `gamewe_message_prefix_clear` empties it |
+| `gamewe_message_prefix` | | Text in front of every gameWE chat message, also in place of the `[gameWE]` of the collector's answers; up to 63 characters, [color tags](#color-tags) allowed, e.g. `"{lightgreen}[MyServer]{default}"`. Empty: the plugin's messages have no prefix and the collector's keep `[gameWE]`. `gamewe_message_prefix_clear` empties it |
 | `gamewe_protect_address` | | `ip:port` of the collector to keep registered |
 | `gamewe_log_locations` | `1` | Log player positions with kills and actions (heatmaps): `0` off, `1` on |
 | `gamewe_display_spectatorinfo` | `0` | CS:S, CS:GO: default for players: show the stats of the spectated player (`0` off, `1` on); each player can override it in the settings menu |
@@ -44,6 +44,27 @@ so they are kept across maps and visits. Without ClientPrefs the menu still
 works, but a choice is lost on reconnect or map change. Logging, the collector
 address, blocked commands, the message prefix and the chat cooldown stay server
 settings.
+
+## Color tags
+
+`gamewe_message_prefix` (and messages sent with `colored 1`) may contain color
+tags. Upper and lower case do not matter.
+
+| Tag | CS:GO | CS:S, DoD:S, HL2:DM, TF2 | Other games |
+|-----|-------|--------------------------|-------------|
+| `{default}` | default | default | default |
+| `{teamcolor}`, `{team}` | team color | team color | team color |
+| `{green}` | green | green | green |
+| `{lightgreen}` | light green | light green (`#99FF99`) | team color |
+| `{olive}` | olive | olive | olive |
+| `{red}`, `{lightred}`, `{darkred}` | red, light red, dark red | `#FF4040`, `#FF8080`, `#B00000` | removed |
+| `{blue}`, `{lightblue}` | blue, light blue | `#4D7AFF`, `#99CCFF` | removed |
+| `{grey}`, `{gray}` | grey | `#CCCCCC` | removed |
+| `{yellow}`, `{orange}`, `{purple}`, `{lime}` | yellow, orange, purple, lime | `#FFD700`, `#FFA500`, `#B070FF`, `#00FF00` | removed |
+
+The gameME tags `x01`, `x03`, `x04`, `x05`, `x07` and `x08` work as well. End
+the prefix with `{default}` so the message after it has the normal color; the
+plugin adds a default color after the prefix of the collector's answers itself.
 
 ## Server commands
 

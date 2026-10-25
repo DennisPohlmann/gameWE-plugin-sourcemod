@@ -14,11 +14,15 @@ The plugin writes standard HL log lines. The ones the collector uses most:
 "Name<2><STEAM_1:0:123><CT>" triggered "weaponstats2" (weapon "ak47") (head "1") (chest "3") (stomach "1") (leftarm "0") (rightarm "1") (leftleg "0") (rightleg "0")
 "Name<2><STEAM_1:0:123><CT>" triggered "mvp"
 "Name<2><STEAM_1:0:123><CT>" say "!rank"
+"Name<2><STEAM_1:0:123><CT>" requested "hideranking" (value "0")
 ```
 
 `weaponstats` lines are written when a player dies, disconnects or the round
 ends (on L4D, L4D2 and Insurgency also every 180 seconds). `weaponstats2` follows
 when the weapon hit something. TF2 writes `weaponstats` without `weaponstats2`.
+`requested "hideranking"` asks the collector for the player's ranking state
+when the settings menu opens and the state is not known yet; the collector
+answers with `gamewe_hidestate`.
 
 ## Server commands
 
@@ -41,6 +45,7 @@ arguments, so it may contain spaces. `\n` in a message (backslash, n) is a line 
 | `gamewe_player_action <userid> <action>` | Logs `triggered "<action>"` for a player. |
 | `gamewe_team_action <team> <action> [objective]` | Logs a team action. |
 | `gamewe_world_action <action>` | Logs a world action. |
+| `gamewe_hidestate <userid> <hideranking>` | The player's ranking state for the settings menu: `0` shown, `1` hidden by an admin, `2` banned, `3` hidden by the player. Sent by the collector after `!hideranking` / `!settings` and for `requested "hideranking"`. |
 | `gamewe_raw_message <type> <query_id> <userid> ...` | Data for other plugins, see below. |
 
 Every command also exists with the `gameme_` prefix, so a collector or script
@@ -49,7 +54,13 @@ written for gameME works unchanged.
 With `colored 1` the plugin replaces the tags `x01`, `x03`, `x04`, `x05`, `x07` and
 `x08` in the message by chat color codes, as the gameME plugin did. `x01` is the
 default color, `x03` the team color and `x04` green on most games. Which colors a
-game can show depends on the game.
+game can show depends on the game. The color tags of `gamewe_message_prefix`
+(see [CONFIG.md](CONFIG.md#color-tags)) work there as well.
+
+The collector starts every `gamewe_psay` chat line with `[gameWE]`. When
+`gamewe_message_prefix` is set, the plugin puts the prefix in its place, so
+the collector's answers (`!rank`, `!hideranking`, `!settings`, ...) show the
+server's prefix like the plugin's own messages.
 
 ## For plugin developers
 

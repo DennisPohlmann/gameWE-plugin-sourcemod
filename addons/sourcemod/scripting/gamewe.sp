@@ -88,13 +88,14 @@ static const char default_blocked_commands[][] = {
 
 // gameWE Stats
 #define GAMEWE_TAG "gameWE"
+#define GAMEWE_CHAT_TAG "[gameWE]" // start of the collector's chat lines
 enum struct gamewe_plugin_data {
   int mod_id;
   char game_mod[32];
   StringMap blocked_commands;
   ConVar block_chat_commands_values;
   ConVar message_prefix;
-  char message_prefix_value[32];
+  char message_prefix_value[64];
   ConVar protect_address;
   char protect_address_value[32];
   ConVar chat_cooldown;
@@ -137,9 +138,14 @@ float gamewe_last_trigger[MAXPLAYERS + 1];
 
 #define SETTING_SERVER_DEFAULT  -1
 
+#define HIDERANKING_UNKNOWN     -1
+
 enum struct player_settings {
 	int damage_display; // 0 = off, 1 = menu, 2 = chat
 	int spectatorinfo;  // 0 = off, 1 = on
+	int hideranking;    // from the collector (gamewe_hidestate): 0 = shown, 1 = admin, 2 = banned, 3 = hidden by the player
+	bool hideranking_wait; // show the settings menu again when the state arrives
+	float hideranking_asked; // game time of the last request, at most one per 5 seconds
 }
 
 player_settings gamewe_player_settings[MAXPLAYERS + 1];
@@ -606,7 +612,7 @@ public void OnPluginStart()
 	CreateConVar("gamewe_plugin_version", GAMEWE_PLUGIN_VERSION, "gameWE Plugin", FCVAR_NOTIFY | FCVAR_DONTRECORD);
 	gamewe_plugin.block_chat_commands_values = CreateConVar("gamewe_block_commands_values", "", "Define which commands should be blocked from the chat area");
 	HookConVarChange(gamewe_plugin.block_chat_commands_values, OnBlockChatCommandsValuesChange);
-	gamewe_plugin.message_prefix = CreateConVar("gamewe_message_prefix", "", "Define the prefix displayed on every gameWE ingame message");
+	gamewe_plugin.message_prefix = CreateConVar("gamewe_message_prefix", "", "Prefix of every gameWE chat message, also of the collector's answers (up to 63 characters, color tags like {green} or {default} allowed)");
 	HookConVarChange(gamewe_plugin.message_prefix, OnMessagePrefixChange);
 	gamewe_plugin.protect_address = CreateConVar("gamewe_protect_address", "", "Address to be protected for logging/forwarding");
 	HookConVarChange(gamewe_plugin.protect_address, OnProtectAddressChange);
@@ -638,6 +644,7 @@ public void OnPluginStart()
 	RegServerCmd("gamewe_psay",           gamewe_psay, "gameWE: <userid[,userid...]> [colored] <message> - send a private chat message");
 	RegServerCmd("gamewe_csay",           gamewe_csay, "gameWE: <message> - display a center message to all players");
 	RegServerCmd("gamewe_msay",           gamewe_msay, "gameWE: <time> <userid> [handler] <message> - display a menu to a player");
+	RegServerCmd("gamewe_hidestate",      gamewe_hidestate, "gameWE: <userid> <hideranking> - ranking state of a player for the settings menu");
 	RegServerCmd("gamewe_tsay",           gamewe_tsay, "gameWE: <time> <userid> <message> - display a top-left message to a player");
 	RegServerCmd("gamewe_hint",           gamewe_hint, "gameWE: <userid[,userid...]> <message> - display a hint message");
 	RegServerCmd("gamewe_khint",          gamewe_khint, "gameWE: <userid[,userid...]> <message> - display a key hint message");
@@ -653,6 +660,7 @@ public void OnPluginStart()
 	RegServerCmd("gameme_psay",           gamewe_psay);
 	RegServerCmd("gameme_csay",           gamewe_csay);
 	RegServerCmd("gameme_msay",           gamewe_msay);
+	RegServerCmd("gameme_hidestate",      gamewe_hidestate);
 	RegServerCmd("gameme_tsay",           gamewe_tsay);
 	RegServerCmd("gameme_hint",           gamewe_hint);
 	RegServerCmd("gameme_khint",          gamewe_khint);
@@ -734,8 +742,8 @@ public void OnPluginStart()
 	}
 
 
-	GetConVarString(gamewe_plugin.message_prefix, gamewe_plugin.message_prefix_value, 32);
-	color_gamewe_entities(gamewe_plugin.message_prefix_value);
+	GetConVarString(gamewe_plugin.message_prefix, gamewe_plugin.message_prefix_value, sizeof(gamewe_plugin.message_prefix_value));
+	color_gamewe_entities(gamewe_plugin.message_prefix_value, sizeof(gamewe_plugin.message_prefix_value));
 
 	if (gamewe_plugin.protect_address != INVALID_HANDLE) {
 		char protect_address_cvar_value[32];
@@ -911,7 +919,7 @@ public void OnAllPluginsLoaded()
 public void gameWESettingsMenu(int client, CookieMenuAction action, any info, char[] buffer, int maxlen)
 {
 	if (action == CookieMenuAction_SelectOption) {
-		DisplayMenu(gamewe_plugin.menu_settings, client, MENU_TIME_FOREVER);
+		display_settings_menu(client);
 	}
 }
 
@@ -920,6 +928,55 @@ public void gameWESettingsMenu(int client, CookieMenuAction action, any info, ch
 public Action gamewe_settings_command(int client, int args)
 {
 	if ((client > 0) && IsClientInGame(client) && !IsFakeClient(client)) {
+		display_settings_menu(client);
+	}
+	return Plugin_Handled;
+}
+
+
+// Shows the settings menu. Without the ranking state yet, the plugin asks
+// the collector for it (`requested "hideranking"`, at most every 5 seconds,
+// so opening the menu cannot flood the collector); the menu is shown again
+// when gamewe_hidestate arrives.
+void display_settings_menu(int client)
+{
+	float now = GetGameTime();
+	float asked = gamewe_player_settings[client].hideranking_asked;
+	if ((gamewe_player_settings[client].hideranking == HIDERANKING_UNKNOWN) &&
+	    ((asked <= 0.0) || ((now - asked) >= 5.0) || (now < asked))) {
+		gamewe_player_settings[client].hideranking_asked = now;
+		gamewe_player_settings[client].hideranking_wait = true;
+		log_player_settings(client, "requested", "hideranking", "0");
+	}
+	DisplayMenu(gamewe_plugin.menu_settings, client, MENU_TIME_FOREVER);
+}
+
+
+// gamewe_hidestate <userid> <hideranking>: the collector tells the player's
+// ranking state, after !hideranking / !settings or when the menu asked.
+public Action gamewe_hidestate(int args)
+{
+	if (args < 2) {
+		PrintToServer("Usage: gamewe_hidestate <userid> <hideranking> - ranking state for the settings menu");
+		return Plugin_Handled;
+	}
+
+	char argument[16];
+	GetCmdArg(1, argument, sizeof(argument));
+	int client = GetClientOfUserId(StringToInt(argument));
+	if ((client < 1) || !IsClientInGame(client) || IsFakeClient(client)) {
+		return Plugin_Handled;
+	}
+
+	GetCmdArg(2, argument, sizeof(argument));
+	int hide_state = StringToInt(argument);
+	if ((hide_state < 0) || (hide_state > 3)) {
+		hide_state = HIDERANKING_UNKNOWN;
+	}
+	gamewe_player_settings[client].hideranking = hide_state;
+
+	if (gamewe_player_settings[client].hideranking_wait) {
+		gamewe_player_settings[client].hideranking_wait = false;
 		DisplayMenu(gamewe_plugin.menu_settings, client, MENU_TIME_FOREVER);
 	}
 	return Plugin_Handled;
@@ -930,6 +987,9 @@ void reset_player_settings(int client)
 {
 	gamewe_player_settings[client].damage_display = SETTING_SERVER_DEFAULT;
 	gamewe_player_settings[client].spectatorinfo  = SETTING_SERVER_DEFAULT;
+	gamewe_player_settings[client].hideranking    = HIDERANKING_UNKNOWN;
+	gamewe_player_settings[client].hideranking_wait = false;
+	gamewe_player_settings[client].hideranking_asked = 0.0;
 }
 
 
@@ -3556,14 +3616,15 @@ public void OnBlockChatCommandsValuesChange(ConVar cvar, const char[] oldVal, co
 
 public void OnMessagePrefixChange(ConVar cvar, const char[] oldVal, const char[] newVal)
 {
-	strcopy(gamewe_plugin.message_prefix_value, 32, newVal);
-	color_gamewe_entities(gamewe_plugin.message_prefix_value);
+	strcopy(gamewe_plugin.message_prefix_value, sizeof(gamewe_plugin.message_prefix_value), newVal);
+	color_gamewe_entities(gamewe_plugin.message_prefix_value, sizeof(gamewe_plugin.message_prefix_value));
 }
 
 
 public Action MessagePrefixClear(int args)
 {
-	strcopy(gamewe_plugin.message_prefix_value, 32, "");
+	// the change hook empties message_prefix_value
+	SetConVarString(gamewe_plugin.message_prefix, "");
 	return Plugin_Handled;
 }
 
@@ -3720,11 +3781,14 @@ public int native_color_gamewe_entities(Handle plugin, int numParams)
 		return 0;
 	}
 
-	char[] message = new char[message_length + 1];
+	// tags can grow (#RRGGBB colors): color in a larger buffer, write back
+	// at most the caller's length
+	int buffer_length = message_length + 64;
+	char[] message = new char[buffer_length];
 	GetNativeString(1, message, message_length + 1);
 
-	color_gamewe_entities(message);
-	SetNativeString(1, message, strlen(message) + 1);
+	color_gamewe_entities(message, buffer_length);
+	SetNativeString(1, message, message_length + 1);
 
 	return 1;
 }
@@ -3761,15 +3825,81 @@ void csgo_chat_start(char[] message, int maxlen)
 }
 
 
-void color_gamewe_entities(char[] message)
+// Color tags {name} for the message prefix and colored messages. The codes
+// are per engine: CS:GO has fixed chat colors, the Orange Box games (CS:S,
+// DoD:S, HL2:DM, TF2) take any color as \x07RRGGBB (written as #RRGGBB here),
+// the other games only know default, team color, green and olive. A tag
+// without a color in a game is removed.
+static const char color_tag_names[][] = {
+	"{default}", "{teamcolor}", "{team}", "{green}", "{lightgreen}", "{olive}",
+	"{red}", "{lightred}", "{darkred}", "{blue}", "{lightblue}", "{grey}",
+	"{gray}", "{yellow}", "{orange}", "{purple}", "{lime}"
+};
+static const char color_tag_csgo[][] = {
+	"\x01", "\x03", "\x03", "\x04", "\x05", "\x05",
+	"\x07", "\x0F", "\x02", "\x0C", "\x0B", "\x08",
+	"\x08", "\x09", "\x10", "\x0E", "\x06"
+};
+static const char color_tag_orangebox[][] = {
+	"\x01", "\x03", "\x03", "\x04", "#99FF99", "\x05",
+	"#FF4040", "#FF8080", "#B00000", "#4D7AFF", "#99CCFF", "#CCCCCC",
+	"#CCCCCC", "#FFD700", "#FFA500", "#B070FF", "#00FF00"
+};
+static const char color_tag_other[][] = {
+	"\x01", "\x03", "\x03", "\x04", "\x03", "\x05",
+	"", "", "", "", "", "",
+	"", "", "", "", ""
+};
+
+void color_gamewe_tags(char[] message, int maxlen)
 {
-	ReplaceString(message, 192, "x08", "\x08");
-	ReplaceString(message, 192, "x07", "\x07");
-	ReplaceString(message, 192, "x05", "\x05");
-	ReplaceString(message, 192, "x04", "\x04");
-	ReplaceString(message, 192, "x03", "\x03");
-	ReplaceString(message, 192, "x01", "\x01");
-	ReplaceString(message, 192, "x||0", "x0");
+	char code[16];
+	for (int i = 0; i < sizeof(color_tag_names); i++) {
+		if (StrContains(message, color_tag_names[i], false) == -1) {
+			continue;
+		}
+		if (gamewe_plugin.mod_id == MOD_CSGO) {
+			strcopy(code, sizeof(code), color_tag_csgo[i]);
+		} else if ((gamewe_plugin.mod_id == MOD_CSS) || (gamewe_plugin.mod_id == MOD_DODS) || (gamewe_plugin.mod_id == MOD_HL2MP) || (gamewe_plugin.mod_id == MOD_TF2)) {
+			strcopy(code, sizeof(code), color_tag_orangebox[i]);
+			if (code[0] == '#') {
+				code[0] = 0x07;
+			}
+		} else {
+			strcopy(code, sizeof(code), color_tag_other[i]);
+		}
+		ReplaceString(message, maxlen, color_tag_names[i], code, false);
+	}
+}
+
+void color_gamewe_entities(char[] message, int maxlen = 192)
+{
+	if (StrContains(message, "{") > -1) {
+		color_gamewe_tags(message, maxlen);
+	}
+	ReplaceString(message, maxlen, "x08", "\x08");
+	ReplaceString(message, maxlen, "x07", "\x07");
+	ReplaceString(message, maxlen, "x05", "\x05");
+	ReplaceString(message, maxlen, "x04", "\x04");
+	ReplaceString(message, maxlen, "x03", "\x03");
+	ReplaceString(message, maxlen, "x01", "\x01");
+	ReplaceString(message, maxlen, "x||0", "x0");
+}
+
+
+// The collector starts its chat lines with [gameWE]; with a message prefix
+// set, the prefix (already colored) takes its place.
+void apply_message_prefix(char[] message, int maxlen)
+{
+	if (gamewe_plugin.message_prefix_value[0] == '\0') {
+		return;
+	}
+	int tag_length = strlen(GAMEWE_CHAT_TAG);
+	if (strncmp(message, GAMEWE_CHAT_TAG, tag_length) == 0) {
+		char rest[192];
+		strcopy(rest, sizeof(rest), message[tag_length]);
+		Format(message, maxlen, "%s\x01%s", gamewe_plugin.message_prefix_value, rest);
+	}
 }
 
 
@@ -4433,6 +4563,7 @@ public Action gamewe_psay(int args)
 
 	char client_message[192];
 	get_cmd_message((ignore_param == 1) ? 2 : 1, client_message, sizeof(client_message));
+	apply_message_prefix(client_message, sizeof(client_message));
 
 	if (IsStackEmpty(gamewe_plugin.message_recipients) == false) {
 		int color_index = -1;
@@ -5287,19 +5418,19 @@ public void CreateGameWEMenuMain(Menu &MenuHandle)
 }
 
 
-// The player's settings. The ranking entries are answered by the collector
-// (the plugin has no database, so both choices are offered and the collector
-// answers with the new state in chat). The display entries are kept by the
-// plugin (clientprefs cookies): selecting one switches to the next value and
-// shows the menu again with the current value.
+// The player's settings. The ranking entry is answered by the collector (the
+// plugin has no database): it hides or shows the player, depending on the
+// state the collector sent last (gamewe_hidestate), and switches when the
+// state is not known yet. The display entries are kept by the plugin
+// (clientprefs cookies): selecting one switches to the next value and shows
+// the menu again with the current value.
 public void CreateGameWEMenuSettings(Menu &MenuHandle)
 {
 	MenuHandle = CreateMenu(gameWESettingsCommandHandler, MenuAction_Display | MenuAction_DisplayItem | MenuAction_DrawItem | MenuAction_Select | MenuAction_Cancel);
 
 	SetMenuTitle(MenuHandle, "gameWE - Settings");
 
-	AddMenuItem(MenuHandle, "SettingsMenu_Hide", "Hide me in the ranking");
-	AddMenuItem(MenuHandle, "SettingsMenu_Show", "Show me in the ranking");
+	AddMenuItem(MenuHandle, "SettingsMenu_Ranking", "Ranking");
 	if (mod_has_damage_display()) {
 		AddMenuItem(MenuHandle, "SettingsMenu_Damage", "Damage display");
 	}
@@ -5368,6 +5499,17 @@ public int gameWESettingsCommandHandler(Menu menu, MenuAction action, int param1
 			char value[128];
 			format_setting_value(param1, info, value, sizeof(value));
 			Format(buffer, sizeof(buffer), "%T", info, param1, value);
+		} else if (strcmp(info, "SettingsMenu_Ranking") == 0) {
+			int hide_state = gamewe_player_settings[param1].hideranking;
+			if (hide_state == 0) {
+				Format(buffer, sizeof(buffer), "%T", "SettingsMenu_Hide", param1);
+			} else if (hide_state == 3) {
+				Format(buffer, sizeof(buffer), "%T", "SettingsMenu_Show", param1);
+			} else if (hide_state == HIDERANKING_UNKNOWN) {
+				Format(buffer, sizeof(buffer), "%T", "SettingsMenu_Ranking", param1);
+			} else {
+				Format(buffer, sizeof(buffer), "%T", "SettingsMenu_RankingLocked", param1);
+			}
 		} else {
 			Format(buffer, sizeof(buffer), "%T", info, param1);
 		}
@@ -5385,6 +5527,11 @@ public int gameWESettingsCommandHandler(Menu menu, MenuAction action, int param1
 		    ((strcmp(info, "SettingsMenu_Spectator") == 0) && (gamewe_plugin.display_spectator == 0))) {
 			return ITEMDRAW_DISABLED;
 		}
+		// hidden by an admin or banned: only an admin can change it
+		if ((strcmp(info, "SettingsMenu_Ranking") == 0) &&
+		    ((gamewe_player_settings[param1].hideranking == 1) || (gamewe_player_settings[param1].hideranking == 2))) {
+			return ITEMDRAW_DISABLED;
+		}
 		return style;
 
 	} else if (action == MenuAction_Display) {
@@ -5395,16 +5542,31 @@ public int gameWESettingsCommandHandler(Menu menu, MenuAction action, int param1
 		Panel panel = view_as<Panel>(param2);
 		SetPanelTitle(panel, buffer);
 
+	} else if (action == MenuAction_Cancel) {
+
+		// closed by the player: do not open it again when the state arrives
+		if ((param2 == MenuCancel_Exit) || (param2 == MenuCancel_ExitBack)) {
+			gamewe_player_settings[param1].hideranking_wait = false;
+		}
+
 	} else if (action == MenuAction_Select) {
 
 		if (IsClientInGame(param1)) {
 			char info[64];
 			GetMenuItem(menu, param2, info, sizeof(info), _, "", 0);
 
-			if (strcmp(info, "SettingsMenu_Hide") == 0) {
-				make_player_command(param1, "/gamewe_hideranking 1");
-			} else if (strcmp(info, "SettingsMenu_Show") == 0) {
-				make_player_command(param1, "/gamewe_hideranking 0");
+			if (strcmp(info, "SettingsMenu_Ranking") == 0) {
+				int hide_state = gamewe_player_settings[param1].hideranking;
+				bool sent;
+				if (hide_state == 0) {
+					sent = make_player_command(param1, "/gamewe_hideranking 1");
+				} else if (hide_state == 3) {
+					sent = make_player_command(param1, "/gamewe_hideranking 0");
+				} else {
+					sent = make_player_command(param1, "/gamewe_hideranking");
+				}
+				// the collector answers with the new state: show the menu with it
+				gamewe_player_settings[param1].hideranking_wait = sent;
 			} else if ((strcmp(info, "SettingsMenu_Damage") == 0) && (gamewe_plugin.damage_display == 1)) {
 				// server default -> off -> menu -> chat -> server default
 				int setting = gamewe_player_settings[param1].damage_display;
@@ -5442,11 +5604,13 @@ public void CreateGameWEMenuEvents(Menu &MenuHandle)
 }
 
 
-void make_player_command(int client, char player_command[192])
+bool make_player_command(int client, char player_command[192])
 {
 	if ((client > 0) && gamewe_trigger_allowed(client)) {
 		log_player_event(client, "say", player_command);
+		return true;
 	}
+	return false;
 }
 
 
@@ -5484,7 +5648,7 @@ public int gameWEMainCommandHandler(Menu menu, MenuAction action, int param1, in
 					case 3 :
 						DisplayMenu(gamewe_plugin.menu_events, param1, MENU_TIME_FOREVER);
 					case 4 :
-						DisplayMenu(gamewe_plugin.menu_settings, param1, MENU_TIME_FOREVER);
+						display_settings_menu(param1);
 				}
 			} else {
 				switch (param2) {
@@ -5515,7 +5679,7 @@ public int gameWEMainCommandHandler(Menu menu, MenuAction action, int param1, in
 					case 12 :
 						make_player_command(param1, "/help");
 					case 13 :
-						DisplayMenu(gamewe_plugin.menu_settings, param1, MENU_TIME_FOREVER);
+						display_settings_menu(param1);
 
 
 				}

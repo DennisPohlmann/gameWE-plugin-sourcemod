@@ -135,6 +135,14 @@
 	{
 		"fr"		"M'afficher dans le classement"
 	}
+	"SettingsMenu_Ranking"
+	{
+		"fr"		"Me masquer ou m'afficher dans le classement"
+	}
+	"SettingsMenu_RankingLocked"
+	{
+		"fr"		"Masqué du classement (seul un admin peut le changer)"
+	}
 	"SettingsMenu_Damage"
 	{
 		"fr"		"Affichage des dégâts : {1}"

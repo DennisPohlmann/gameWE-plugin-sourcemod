@@ -136,6 +136,14 @@
 	{
 		"pt"		"Mostrar-me no ranking"
 	}
+	"SettingsMenu_Ranking"
+	{
+		"pt"		"Ocultar ou mostrar-me no ranking"
+	}
+	"SettingsMenu_RankingLocked"
+	{
+		"pt"		"Oculto no ranking (só um admin pode mudar isso)"
+	}
 	"SettingsMenu_Damage"
 	{
 		"pt"		"Exibição de dano: {1}"

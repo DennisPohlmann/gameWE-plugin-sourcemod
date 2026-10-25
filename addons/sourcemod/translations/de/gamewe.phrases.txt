@@ -136,6 +136,14 @@
 	{
 		"de"		"Mich in der Rangliste anzeigen"
 	}
+	"SettingsMenu_Ranking"
+	{
+		"de"		"Mich in der Rangliste verstecken oder anzeigen"
+	}
+	"SettingsMenu_RankingLocked"
+	{
+		"de"		"In der Rangliste versteckt (nur ein Admin kann das ändern)"
+	}
 	"SettingsMenu_Damage"
 	{
 		"de"		"Schadensanzeige: {1}"

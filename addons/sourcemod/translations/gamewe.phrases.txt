@@ -137,6 +137,14 @@
 	{
 		"en"		"Show me in the ranking"
 	}
+	"SettingsMenu_Ranking"
+	{
+		"en"		"Hide or show me in the ranking"
+	}
+	"SettingsMenu_RankingLocked"
+	{
+		"en"		"Hidden from the ranking (only an admin can change it)"
+	}
 	"SettingsMenu_Damage"
 	{
 		"#format"	"{1:s}"

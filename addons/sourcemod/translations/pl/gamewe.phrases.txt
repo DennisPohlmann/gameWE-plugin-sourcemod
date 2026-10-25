@@ -136,6 +136,14 @@
 	{
 		"pl"		"Pokaż mnie w rankingu"
 	}
+	"SettingsMenu_Ranking"
+	{
+		"pl"		"Ukryj lub pokaż mnie w rankingu"
+	}
+	"SettingsMenu_RankingLocked"
+	{
+		"pl"		"Ukryty w rankingu (tylko admin może to zmienić)"
+	}
 	"SettingsMenu_Damage"
 	{
 		"pl"		"Wyświetlanie obrażeń: {1}"

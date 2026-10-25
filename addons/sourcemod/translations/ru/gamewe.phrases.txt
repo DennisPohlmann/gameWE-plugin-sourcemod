@@ -136,6 +136,14 @@
 	{
 		"ru"		"Показать меня в рейтинге"
 	}
+	"SettingsMenu_Ranking"
+	{
+		"ru"		"Скрыть или показать меня в рейтинге"
+	}
+	"SettingsMenu_RankingLocked"
+	{
+		"ru"		"Скрыт в рейтинге (изменить может только админ)"
+	}
 	"SettingsMenu_Damage"
 	{
 		"ru"		"Показ урона: {1}"

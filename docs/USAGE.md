@@ -31,11 +31,16 @@ settings menu `!settings`, when ClientPrefs is loaded). The menu entries send th
 matching chat command for the player, for example `/rank` or `/top10`. The
 menu entry "Settings" (also `!gamewe_settings`, the console command
 `sm_gamewe_settings`, and "gameWE Settings" in SourceMod's `!settings` menu) has
-"Hide me in the ranking" and "Show me in the ranking": they send
-`/gamewe_hideranking 1` or `/gamewe_hideranking 0` for the player, and the
-collector answers with the new state in chat. The plugin has
-no database, so it cannot show the ranking state; both choices are always
-offered.
+one ranking entry that fits the player's current state: "Hide me in the
+ranking" when the player is shown, "Show me in the ranking" when the player hid
+themselves, and a disabled "Hidden from the ranking" when an admin or a ban hid
+the player. Selecting it sends `/gamewe_hideranking 1` or `/gamewe_hideranking 0`
+for the player; the collector answers in chat and with the new state, and the
+menu opens again with the switched entry. The plugin has no database: it gets
+the state from the collector (`gamewe_hidestate`, asked for with
+`requested "hideranking"` when the menu opens the first time). As long as no
+state has arrived (a collector without this command), the entry is "Hide or show
+me in the ranking" and switches (`/gamewe_hideranking`).
 
 The settings menu also has the player's own display settings, with their
 current value:
