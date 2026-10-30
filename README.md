@@ -106,7 +106,7 @@ Every step in detail: [docs/INSTALLATION.md](docs/INSTALLATION.md).
 
 ```bash
 make build      # build/stage/addons/sourcemod/plugins/gamewe.smx
-make package    # dist/gamewe-sourcemod-<version>.tar.gz, .zip and .sha256
+make package    # dist/gamewe-sourcemod-<version>.tar.gz and .zip, each with its .sha256
 ```
 
 Requirements and the release process: [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md).

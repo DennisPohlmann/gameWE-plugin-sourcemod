@@ -9,7 +9,7 @@ You need `spcomp` from SourceMod 1.12 or newer.
 
 ```bash
 make build      # build/stage/addons/sourcemod/plugins/gamewe.smx
-make package    # dist/gamewe-sourcemod-<version>.tar.gz, .zip and .sha256
+make package    # dist/gamewe-sourcemod-<version>.tar.gz and .zip, each with its .sha256
 ```
 
 If `spcomp` is not in `PATH`, use `make SPCOMP=/path/to/spcomp`. To add another
@@ -39,5 +39,5 @@ For a release it writes `VERSION`, `GAMEWE_PLUGIN_VERSION` in
 `gamewe.sp`/`gamewe_messages.sp` and `CHANGELOG.md`, commits them as
 `chore(release): vX.Y.Z [skip ci]`, tags `vX.Y.Z` and creates the GitHub
 release. The workflow then builds that tag with SourceMod 1.12 and uploads the
-packages (`.tar.gz`, `.zip`, `.sha256`) to the release. Never edit the version
-files or `CHANGELOG.md` by hand.
+packages (`.tar.gz`, `.zip`) and their own `.tar.gz.sha256` and `.zip.sha256`
+to the release. Never edit the version files or `CHANGELOG.md` by hand.

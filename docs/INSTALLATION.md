@@ -49,7 +49,8 @@ The server log shows the result after the start: `gameWE Game Detection: ...`.
 ## Install
 
 1. Download `gamewe-sourcemod-<version>.tar.gz` (or `.zip`) and its `.sha256`
-   from the releases and check it: `sha256sum -c gamewe-sourcemod-<version>.sha256`.
+   (`gamewe-sourcemod-<version>.tar.gz.sha256` or `.zip.sha256`) from the
+   releases and check it: `sha256sum -c gamewe-sourcemod-<version>.tar.gz.sha256`.
 2. Extract it into the game folder, the folder that contains `addons/`
    (`cstrike/`, `csgo/`, `tf/`, `dod/`, `hl2mp/`, `left4dead2/`, ...):
 

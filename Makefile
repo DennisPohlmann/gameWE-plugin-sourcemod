@@ -35,10 +35,12 @@ package: build
 	cp -r addons/sourcemod/scripting addons/sourcemod/translations $(STAGE)/addons/sourcemod/
 	install -m 0644 README.md CHANGELOG.md LICENSE $(STAGE)/
 	install -d $(DIST)
-	rm -f $(DIST)/$(PKG).tar.gz $(DIST)/$(PKG).zip
+	rm -f $(DIST)/$(PKG).tar.gz $(DIST)/$(PKG).zip $(DIST)/$(PKG).sha256 \
+		$(DIST)/$(PKG).tar.gz.sha256 $(DIST)/$(PKG).zip.sha256
 	tar --sort=name --owner=0 --group=0 --numeric-owner -C $(STAGE) -czf $(DIST)/$(PKG).tar.gz addons README.md CHANGELOG.md LICENSE
 	cd $(STAGE) && zip -qrX ../../$(DIST)/$(PKG).zip addons README.md CHANGELOG.md LICENSE
-	cd $(DIST) && sha256sum $(PKG).tar.gz $(PKG).zip > $(PKG).sha256
+	cd $(DIST) && sha256sum $(PKG).tar.gz > $(PKG).tar.gz.sha256
+	cd $(DIST) && sha256sum $(PKG).zip > $(PKG).zip.sha256
 	@echo "built $(DIST)/$(PKG).tar.gz and $(DIST)/$(PKG).zip"
 
 clean:
