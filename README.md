@@ -48,9 +48,13 @@ Current version: see `VERSION` and [CHANGELOG.md](CHANGELOG.md).
 | Day of Defeat: Source | `DODS` |
 | Half-Life 2: Deathmatch | `HL2MP` |
 | Left 4 Dead, Left 4 Dead 2 | `L4D`, `L4DII` |
-| Insurgency (2014) | `INSMOD` |
-| Fortress Forever, CSPromod, Zombie Panic! Source | `FF`, `CSP`, `ZPS` |
+| Zombie Panic! Source | `ZPS` |
 | Fistful of Frags, No More Room in Hell | `FOF`, `NMRIH` |
+
+Insurgency (2014), Fortress Forever and CSPromod are no longer supported:
+the gameWE collector retired them (no new rankings, existing ones keep
+running). The plugin still recognizes them (`INSMOD`, `FF`, `CSP`) so a
+server that runs one keeps logging as before.
 
 The game is detected from the engine version, and from the game name and folder
 for mods. The result is in the log: `gameWE Game Detection: ...`.
