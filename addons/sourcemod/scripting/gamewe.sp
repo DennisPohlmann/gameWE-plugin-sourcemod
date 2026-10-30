@@ -62,9 +62,7 @@ public Plugin myinfo = {
 #define MOD_TF2 4
 #define MOD_L4D 5
 #define MOD_L4DII 6
-#define MOD_INSMOD 7
-#define MOD_FF 8
-#define MOD_CSP 9
+// 7, 8 and 9 were Insurgency, Fortress Forever and CSPromod (no longer supported)
 #define MOD_ZPS 10
 #define MOD_CSGO 11
 #define MOD_FOF 12
@@ -247,7 +245,7 @@ gamewe_player_data gamewe_players[MAXPLAYERS + 1];
 #define HITGROUP_LEFTLEG   6
 #define HITGROUP_RIGHTLEG  7
 
-#define MAX_LOG_WEAPONS    96 // must be >= the longest weapon list below (Insurgency: 88)
+#define MAX_LOG_WEAPONS    96 // must be >= the longest weapon list below (CS:GO: 74)
 enum struct weapon_data {
 	int wshots;
 	int whits;
@@ -469,28 +467,6 @@ zps_player zps_players[MAXPLAYERS + 1];
 
 
 /**
- *  Insurgency 2014
- */
-
-#define MAX_INSMOD_WEAPON_COUNT 88
-static const char insmod_weapon_list[][] = { "mp443", "m1asocom16", "ppsh41", "m1014", "m1garand", "steyraug", "car15", "kar98", "sig553", "sten", "thompson",
-                                             "stg44", "sr25", "spectre", "spas12", "scarl", "scar", "saiga12auto", "remingtonmsr", "pecheneg", "p90", "ots33",
-                                             "nova", "mp7", "mp5a4", "mk46", "mk18_m0", "mg42", "mac10", "m60", "m500", "m4a1sopmod", "m240", "m16a1", "m107",
-                                             "ksg", "krissvector", "honeybadger", "hk417", "gol", "glock33", "glock18", "g36c", "g33", "famas", "f2000", "enfield",
-                                             "dragunovsvu", "deagle", "combatcommander", "colt9mm", "cobra", "cm901", "asval", "ak12u", "acr", "type95", "l85a2",
-                                             "ak74", "akm", "aks74u", "fal", "m14", "m16a4", "m1911", "m1a1", "m249", "m40a1", "m45", "m4a1", "m590", "m9", "makarov",
-                                             "mini14", "mk18", "mosin", "mp40", "mp5", "rpk", "sks", "toz", "ump45", "galil", "galil_sar", "sterling", "model10", "l1a1",
-                                             "gurkha"
-                                           };
-
-enum struct insmod_player {
-	char last_role[64];
-}
-
-insmod_player insmod_players[MAXPLAYERS + 1];
-
-
-/**
  *  Team Fortress 2
  */
 
@@ -548,7 +524,6 @@ static const char tf2_weapon_list[MAX_TF2_WEAPON_COUNT][] = {
 #assert MAX_L4D_WEAPON_COUNT <= MAX_LOG_WEAPONS
 #assert MAX_HL2MP_WEAPON_COUNT <= MAX_LOG_WEAPONS
 #assert MAX_ZPS_WEAPON_COUNT <= MAX_LOG_WEAPONS
-#assert MAX_INSMOD_WEAPON_COUNT <= MAX_LOG_WEAPONS
 #assert MAX_TF2_WEAPON_COUNT <= MAX_LOG_WEAPONS
 
 
@@ -714,10 +689,6 @@ public void OnPluginStart()
 	RegConsoleCmd("say",                 gamewe_block_commands);
 	RegConsoleCmd("say_team",            gamewe_block_commands);
 
-	if (gamewe_plugin.mod_id == MOD_INSMOD) {
-		RegConsoleCmd("say2",            gamewe_block_commands);
-	}
-
 	// gamewe_auto: the commands players want at round start, round end and
 	// when they die; the events a game does not have are skipped
 	HookEventEx("round_start",          Event_AutoRoundStart, EventHookMode_PostNoCopy);
@@ -742,7 +713,7 @@ public void OnPluginStart()
 	}
 
 
-	if ((gamewe_plugin.mod_id == MOD_CSGO) || (gamewe_plugin.mod_id == MOD_CSS) || (gamewe_plugin.mod_id == MOD_HL2MP) || (gamewe_plugin.mod_id == MOD_TF2) || (gamewe_plugin.mod_id == MOD_L4D) || (gamewe_plugin.mod_id == MOD_L4DII) || (gamewe_plugin.mod_id == MOD_INSMOD)) {
+	if ((gamewe_plugin.mod_id == MOD_CSGO) || (gamewe_plugin.mod_id == MOD_CSS) || (gamewe_plugin.mod_id == MOD_HL2MP) || (gamewe_plugin.mod_id == MOD_TF2) || (gamewe_plugin.mod_id == MOD_L4D) || (gamewe_plugin.mod_id == MOD_L4DII)) {
 		HookEvent("player_team", gameWE_Event_PlyTeamChange, EventHookMode_Pre);
 	}
 
@@ -1289,8 +1260,7 @@ public void OnMapStart()
 	}
 
 	if ((gamewe_plugin.mod_id == MOD_CSGO) || (gamewe_plugin.mod_id == MOD_CSS) || (gamewe_plugin.mod_id == MOD_TF2) || (gamewe_plugin.mod_id == MOD_DODS) || (gamewe_plugin.mod_id == MOD_HL2MP) ||
-	    (gamewe_plugin.mod_id == MOD_INSMOD) || (gamewe_plugin.mod_id == MOD_FF) || (gamewe_plugin.mod_id == MOD_L4D) || (gamewe_plugin.mod_id == MOD_L4DII) ||
-	    (gamewe_plugin.mod_id == MOD_CSP) || (gamewe_plugin.mod_id == MOD_FOF)) {
+	    (gamewe_plugin.mod_id == MOD_L4D) || (gamewe_plugin.mod_id == MOD_L4DII) || (gamewe_plugin.mod_id == MOD_FOF)) {
 
 		char map_name[64];
 		GetCurrentMap(map_name, 64);
@@ -1306,7 +1276,7 @@ public void OnMapStart()
 		}
 	}
 
-	if ((gamewe_plugin.mod_id == MOD_CSGO) || (gamewe_plugin.mod_id == MOD_CSS) || (gamewe_plugin.mod_id == MOD_HL2MP) || (gamewe_plugin.mod_id == MOD_TF2) || (gamewe_plugin.mod_id == MOD_L4D) || (gamewe_plugin.mod_id == MOD_L4DII) || (gamewe_plugin.mod_id == MOD_INSMOD)) {
+	if ((gamewe_plugin.mod_id == MOD_CSGO) || (gamewe_plugin.mod_id == MOD_CSS) || (gamewe_plugin.mod_id == MOD_HL2MP) || (gamewe_plugin.mod_id == MOD_TF2) || (gamewe_plugin.mod_id == MOD_L4D) || (gamewe_plugin.mod_id == MOD_L4DII)) {
 		find_player_team_slot(2);
 		find_player_team_slot(3);
 	}
@@ -1332,7 +1302,6 @@ void get_server_mod()
 			case Engine_DODS:         set_server_mod("DODS", MOD_DODS);
 			case Engine_HL2DM:        set_server_mod("HL2MP", MOD_HL2MP);
 			case Engine_TF2:          set_server_mod("TF2", MOD_TF2);
-			case Engine_Insurgency:   set_server_mod("INSMOD", MOD_INSMOD);
 			case Engine_Left4Dead:    set_server_mod("L4D", MOD_L4D);
 			case Engine_Left4Dead2:   set_server_mod("L4DII", MOD_L4DII);
 		}
@@ -1362,10 +1331,6 @@ void get_server_mod()
 				strcopy(gamewe_plugin.game_mod, 32, "TF2");
 				gamewe_plugin.mod_id = MOD_TF2;
 			}
-			if (StrContains(game_description, "Insurgency", false) != -1) {
-				strcopy(gamewe_plugin.game_mod, 32, "INSMOD");
-				gamewe_plugin.mod_id = MOD_INSMOD;
-			}
 			if (StrContains(game_description, "L4D", false) != -1) {
 				strcopy(gamewe_plugin.game_mod, 32, "L4D");
 				gamewe_plugin.mod_id = MOD_L4D;
@@ -1373,14 +1338,6 @@ void get_server_mod()
 			if (StrContains(game_description, "Left 4 Dead 2", false) != -1) {
 				strcopy(gamewe_plugin.game_mod, 32, "L4DII");
 				gamewe_plugin.mod_id = MOD_L4DII;
-			}
-			if (StrContains(game_description, "Fortress Forever", false) != -1) {
-				strcopy(gamewe_plugin.game_mod, 32, "FF");
-				gamewe_plugin.mod_id = MOD_FF;
-			}
-			if (StrContains(game_description, "CSPromod", false) != -1) {
-				strcopy(gamewe_plugin.game_mod, 32, "CSP");
-				gamewe_plugin.mod_id = MOD_CSP;
 			}
 			if (StrContains(game_description, "ZPS", false) != -1) {
 				strcopy(gamewe_plugin.game_mod, 32, "ZPS");
@@ -1422,10 +1379,6 @@ void get_server_mod()
 				strcopy(gamewe_plugin.game_mod, 32, "TF2");
 				gamewe_plugin.mod_id = MOD_TF2;
 			}
-			if (StrContains(game_folder, "insurgency", false) != -1) {
-				strcopy(gamewe_plugin.game_mod, 32, "INSMOD");
-				gamewe_plugin.mod_id = MOD_INSMOD;
-			}
 			if (StrContains(game_folder, "left4dead", false) != -1) {
 				strcopy(gamewe_plugin.game_mod, 32, "L4D");
 				gamewe_plugin.mod_id = MOD_L4D;
@@ -1433,14 +1386,6 @@ void get_server_mod()
 			if (StrContains(game_folder, "left4dead2", false) != -1) {
 				strcopy(gamewe_plugin.game_mod, 32, "L4DII");
 				gamewe_plugin.mod_id = MOD_L4DII;
-			}
-			if (StrContains(game_folder, "FortressForever", false) != -1) {
-				strcopy(gamewe_plugin.game_mod, 32, "FF");
-				gamewe_plugin.mod_id = MOD_FF;
-			}
-			if (StrContains(game_folder, "cspromod", false) != -1) {
-				strcopy(gamewe_plugin.game_mod, 32, "CSP");
-				gamewe_plugin.mod_id = MOD_CSP;
 			}
 			if (StrContains(game_folder, "zps", false) != -1) {
 				strcopy(gamewe_plugin.game_mod, 32, "ZPS");
@@ -1572,16 +1517,6 @@ void get_server_mod()
 				}
 
 			}
-			case MOD_INSMOD: {
-				HookEvent("player_death", 			 Event_INSMODPlayerDeath);
-				HookEvent("player_hurt",  			 Event_INSMODPlayerHurt);
-				HookEvent("weapon_fire",  			 Event_INSMODEventFired);
-				HookEvent("player_spawn", 			 Event_INSMODPlayerSpawn);
-				HookEvent("player_pick_squad",       Event_INSMODPlayerPickSquad);
-				HookEvent("round_end",    			 Event_INSMODRoundEnd);
-				HookEvent("object_destroyed",		 Event_INSMODObjectiveDestroyed);
-				HookEvent("controlpoint_captured",	 Event_INSMODControlpointCapped);
-			}
 			case MOD_HL2MP: {
 				HookEvent("player_death",            Event_HL2MPPlayerDeath);
 				HookEvent("player_spawn",            Event_HL2MPPlayerSpawn);
@@ -1592,16 +1527,12 @@ void get_server_mod()
 				HookEvent("player_spawn",            Event_ZPSPlayerSpawn);
 				HookEvent("round_end",               Event_ZPSRoundEnd, EventHookMode_PostNoCopy);
 			}
-			case MOD_CSP: {
-				HookEvent("round_start",   			 Event_CSPRoundStart);
-				HookEvent("round_end",    			 Event_CSPRoundEnd);
-			}
 		} // end switch
 
 		// generic death event hook
 		HookEvent("player_death", gameWE_Event_PlyDeath, EventHookMode_Pre);
 
-		if ((gamewe_plugin.mod_id == MOD_L4D) || (gamewe_plugin.mod_id == MOD_L4DII) || (gamewe_plugin.mod_id == MOD_INSMOD)) {
+		if ((gamewe_plugin.mod_id == MOD_L4D) || (gamewe_plugin.mod_id == MOD_L4DII)) {
 			// since almost no deaths occurs force the data to be logged at least every 180 seconds
 			CreateTimer(180.0, flush_weapon_logs, 0, TIMER_REPEAT);
 		}
@@ -1853,12 +1784,6 @@ void dump_player_data(int player_index)
 						LogToGame("\"%L\" triggered \"weaponstats\" (weapon \"%s\") (shots \"%d\") (hits \"%d\") (kills \"%d\") (headshots \"%d\") (tks \"%d\") (damage \"%d\") (deaths \"%d\")", player_index, l4d_weapon_list[i], player_weapons[player_index][i].wshots, player_weapons[player_index][i].whits, player_weapons[player_index][i].wkills, player_weapons[player_index][i].wheadshots, player_weapons[player_index][i].wteamkills, player_weapons[player_index][i].wdamage, player_weapons[player_index][i].wdeaths);
 						if (player_weapons[player_index][i].whits > 0) {
 							LogToGame("\"%L\" triggered \"weaponstats2\" (weapon \"%s\") (head \"%d\") (chest \"%d\") (stomach \"%d\") (leftarm \"%d\") (rightarm \"%d\") (leftleg \"%d\") (rightleg \"%d\")", player_index, l4d_weapon_list[i], player_weapons[player_index][i].whead, player_weapons[player_index][i].wchest, player_weapons[player_index][i].wstomach, player_weapons[player_index][i].wleftarm, player_weapons[player_index][i].wrightarm, player_weapons[player_index][i].wleftleg, player_weapons[player_index][i].wrightleg);
-						}
-					}
-					case MOD_INSMOD: {
-						LogToGame("\"%L\" triggered \"weaponstats\" (weapon \"%s\") (shots \"%d\") (hits \"%d\") (kills \"%d\") (headshots \"%d\") (tks \"%d\") (damage \"%d\") (deaths \"%d\")", player_index, insmod_weapon_list[i], player_weapons[player_index][i].wshots, player_weapons[player_index][i].whits, player_weapons[player_index][i].wkills, player_weapons[player_index][i].wheadshots, player_weapons[player_index][i].wteamkills, player_weapons[player_index][i].wdamage, player_weapons[player_index][i].wdeaths);
-						if (player_weapons[player_index][i].whits > 0) {
-							LogToGame("\"%L\" triggered \"weaponstats2\" (weapon \"%s\") (head \"%d\") (chest \"%d\") (stomach \"%d\") (leftarm \"%d\") (rightarm \"%d\") (leftleg \"%d\") (rightleg \"%d\")", player_index, insmod_weapon_list[i], player_weapons[player_index][i].whead, player_weapons[player_index][i].wchest, player_weapons[player_index][i].wstomach, player_weapons[player_index][i].wleftarm, player_weapons[player_index][i].wrightarm, player_weapons[player_index][i].wleftleg, player_weapons[player_index][i].wrightleg);
 						}
 					}
 					case MOD_HL2MP: {
@@ -3110,13 +3035,6 @@ public void Event_ZPSPlayerSpawn(Event event, const char[] name, bool dontBroadc
 }
 
 
-public Action Event_CSPRoundStart(Event event, const char[] name, bool dontBroadcast)
-{
-	LogToGame("World triggered \"Round_Start\"");
-	return Plugin_Continue;
-}
-
-
 public void Event_CSGORoundStart(Event event, const char[] name, bool dontBroadcast)
 {
 	if (gamewe_plugin.display_spectator == 1) {
@@ -3220,16 +3138,6 @@ public void Event_ZPSRoundEnd(Event event, const char[] name, bool dontBroadcast
 	for (int i = 1; (i <= MaxClients); i++) {
 		dump_player_data(i);
 	}
-}
-
-
-public void Event_CSPRoundEnd(Event event, const char[] name, bool dontBroadcast)
-{
-	int team_index = GetEventInt(event, "winners");
-	if (strcmp(team_list[team_index], "") != 0) {
-		log_team_event(team_list[team_index], "Round_Win");
-	}
-	LogToGame("World triggered \"Round_End\"");
 }
 
 
@@ -4092,12 +4000,12 @@ public void OnClientDisconnect(int client)
 {
 	if (client > 0) {
 		reset_player_settings(client);
-		if ((gamewe_plugin.mod_id == MOD_CSGO) || (gamewe_plugin.mod_id == MOD_CSS) || (gamewe_plugin.mod_id == MOD_DODS) || (gamewe_plugin.mod_id == MOD_L4D) || (gamewe_plugin.mod_id == MOD_L4DII) || (gamewe_plugin.mod_id == MOD_INSMOD) || (gamewe_plugin.mod_id == MOD_HL2MP) || (gamewe_plugin.mod_id == MOD_TF2) || (gamewe_plugin.mod_id == MOD_ZPS)) {
+		if ((gamewe_plugin.mod_id == MOD_CSGO) || (gamewe_plugin.mod_id == MOD_CSS) || (gamewe_plugin.mod_id == MOD_DODS) || (gamewe_plugin.mod_id == MOD_L4D) || (gamewe_plugin.mod_id == MOD_L4DII) || (gamewe_plugin.mod_id == MOD_HL2MP) || (gamewe_plugin.mod_id == MOD_TF2) || (gamewe_plugin.mod_id == MOD_ZPS)) {
 			dump_player_data(client);
 			reset_player_data(client);
 		}
 		if (IsClientInGame(client)) {
-			if ((gamewe_plugin.mod_id == MOD_CSGO) || (gamewe_plugin.mod_id == MOD_CSS) || (gamewe_plugin.mod_id == MOD_HL2MP) || (gamewe_plugin.mod_id == MOD_TF2) || (gamewe_plugin.mod_id == MOD_L4D) || (gamewe_plugin.mod_id == MOD_L4DII) || (gamewe_plugin.mod_id == MOD_INSMOD)) {
+			if ((gamewe_plugin.mod_id == MOD_CSGO) || (gamewe_plugin.mod_id == MOD_CSS) || (gamewe_plugin.mod_id == MOD_HL2MP) || (gamewe_plugin.mod_id == MOD_TF2) || (gamewe_plugin.mod_id == MOD_L4D) || (gamewe_plugin.mod_id == MOD_L4DII)) {
 				int team_index = GetClientTeam(client);
 				if (client == ColorSlotArray[team_index]) {
 					ColorSlotArray[team_index] = -1;
@@ -4752,7 +4660,7 @@ public Action gamewe_psay(int args)
 
 	if (IsStackEmpty(gamewe_plugin.message_recipients) == false) {
 		int color_index = -1;
-		if ((gamewe_plugin.mod_id == MOD_CSGO) || (gamewe_plugin.mod_id == MOD_CSS) || (gamewe_plugin.mod_id == MOD_DODS) || (gamewe_plugin.mod_id == MOD_HL2MP) || (gamewe_plugin.mod_id == MOD_TF2) || (gamewe_plugin.mod_id == MOD_L4D) || (gamewe_plugin.mod_id == MOD_L4DII) || (gamewe_plugin.mod_id == MOD_INSMOD)) {
+		if ((gamewe_plugin.mod_id == MOD_CSGO) || (gamewe_plugin.mod_id == MOD_CSS) || (gamewe_plugin.mod_id == MOD_DODS) || (gamewe_plugin.mod_id == MOD_HL2MP) || (gamewe_plugin.mod_id == MOD_TF2) || (gamewe_plugin.mod_id == MOD_L4D) || (gamewe_plugin.mod_id == MOD_L4DII)) {
 
 			if (is_colored > 1) {
 				validate_team_colors();
@@ -5298,7 +5206,7 @@ public Action gameWE_Event_PlyDeath(Event event, const char[] name, bool dontBro
 		int headshot = 0;
 		headshot = GetEventBool(event, "headshot");
 
-		if (((gamewe_plugin.mod_id == MOD_CSGO) || (gamewe_plugin.mod_id == MOD_CSS) || (gamewe_plugin.mod_id == MOD_CSP)) && (victim > 0)) {
+		if (((gamewe_plugin.mod_id == MOD_CSGO) || (gamewe_plugin.mod_id == MOD_CSS)) && (victim > 0)) {
 			if (headshot == 1) {
 				int player_team_index = GetClientTeam(attacker);
 				int victim_team_index = GetClientTeam(victim);
@@ -5306,7 +5214,7 @@ public Action gameWE_Event_PlyDeath(Event event, const char[] name, bool dontBro
 					log_player_event(attacker, "triggered", "headshot");
 				}
 			}
-			if ((gamewe_plugin.log_locations == 1) && ((gamewe_plugin.mod_id != MOD_CSP))) {
+			if (gamewe_plugin.log_locations == 1) {
 				if (attacker != victim) {
 					log_player_location("kill", attacker, victim);
 				} else {
@@ -5379,7 +5287,7 @@ public Action gameWE_Event_PlyDeath(Event event, const char[] name, bool dontBro
 		}
 
 		if (gamewe_plugin.log_locations == 1) {
-			if (((gamewe_plugin.mod_id == MOD_INSMOD) || (gamewe_plugin.mod_id == MOD_HL2MP) || (gamewe_plugin.mod_id == MOD_DODS)) && (victim > 0)) {
+			if (((gamewe_plugin.mod_id == MOD_HL2MP) || (gamewe_plugin.mod_id == MOD_DODS)) && (victim > 0)) {
 				if (attacker != victim) {
 					log_player_location("kill", attacker, victim);
 				}
@@ -7078,8 +6986,7 @@ stock void AddPluginServerTag(const char[] tag)
 	    ((gamewe_plugin.engine_version != Engine_CSS) && (gamewe_plugin.engine_version != Engine_HL2DM) &&
 	     (gamewe_plugin.engine_version != Engine_DODS) && (gamewe_plugin.engine_version != Engine_TF2) &&
 	     (gamewe_plugin.engine_version != Engine_NuclearDawn) && (gamewe_plugin.engine_version != Engine_Left4Dead) &&
-	     (gamewe_plugin.engine_version != Engine_Left4Dead2) && (gamewe_plugin.engine_version != Engine_CSGO) &&
-	     (gamewe_plugin.engine_version != Engine_Insurgency))) {
+	     (gamewe_plugin.engine_version != Engine_Left4Dead2) && (gamewe_plugin.engine_version != Engine_CSGO))) {
 		return;
 	}
 
@@ -7105,229 +7012,4 @@ stock void AddPluginServerTag(const char[] tag)
 	SetConVarFlags(gamewe_plugin.sv_tags, flags);
 
 	LogToGame("Added gameWE gameserver tag [%s]", new_tags);
-}
-
-
-public void Event_INSMODPlayerDeath(Event event, const char[] name, bool dontBroadcast)
-{
-	//	"deathflags"		"short"
-	//	"attacker"			"short"
-	//	"customkill"		"short"
-	//	"lives"				"short"
-	//	"attackerteam"		"short"
-	//	"damagebits"		"short"
-	//	"weapon"			"string"
-	//	"weaponid"			"short"
-	//	"userid"			"short"
-	//	"priority"			"short"
-	//	"team"				"short"
-	//	"y"					"float"
-	//	"x"					"float"
-	//	"z"					"float"
-	//	"assister"			"short"
-
-	int victim   = GetClientOfUserId(GetEventInt(event, "userid"));
-	int attacker = GetClientOfUserId(GetEventInt(event, "attacker"));
-
-	if ((victim > 0) && (attacker > 0)) {
-		if (attacker != victim) {
-			char weapon_str[32];
-			GetEventString(event, "weapon", weapon_str, 32);
-			ReplaceString(weapon_str, 32, "weapon_", "", false);
-
-			int weapon_index = get_weapon_index(insmod_weapon_list, MAX_INSMOD_WEAPON_COUNT, weapon_str);
-			if (weapon_index > -1) {
-				player_weapons[attacker][weapon_index].wkills++;
-				player_weapons[victim][weapon_index].wdeaths++;
-				if (GetClientTeam(attacker) == GetClientTeam(victim)) {
-					player_weapons[attacker][weapon_index].wteamkills++;
-				}
-			}
-
-			int assister = GetClientOfUserId(GetEventInt(event, "assister"));
-			if ((assister > 0) && (assister != victim)) {
-				log_player_player_event(assister, victim, "triggered", "kill_assist");
-			}
-		}
-		dump_player_data(victim);
-	}
-}
-
-
-public void Event_INSMODPlayerHurt(Event event, const char[] name, bool dontBroadcast)
-{
-	//	"userid"		"short"
-	//	"weapon"		"string"
-	//	"hitgroup"		"short"
-	//	"priority"		"short"
-	//	"attacker"		"short"
-	//	"dmg_health"	"short"
-	//	"health"		"byte"
-
-	int attacker  = GetClientOfUserId(GetEventInt(event, "attacker"));
-	int victim = GetClientOfUserId(GetEventInt(event, "userid"));
-
-	if ((attacker > 0) && (attacker != victim)) {
-		char weapon_str[32];
-		GetEventString(event, "weapon", weapon_str, 32);
-		ReplaceString(weapon_str, 32, "weapon_", "", false);
-
-		int weapon_index = get_weapon_index(insmod_weapon_list, MAX_INSMOD_WEAPON_COUNT, weapon_str);
-		if (weapon_index > -1) {
-			player_weapons[attacker][weapon_index].wshots++;
-			player_weapons[attacker][weapon_index].whits++;
-			player_weapons[attacker][weapon_index].wdamage  += GetEventInt(event, "dmg_health");
-			int hitgroup  = GetEventInt(event, "hitgroup");
-			if ((hitgroup >= 0) && (hitgroup < 8)) {
-				switch (hitgroup) {
-					case HITGROUP_GENERIC:
-						player_weapons[attacker][weapon_index].wgeneric++;
-					case HITGROUP_HEAD:
-						player_weapons[attacker][weapon_index].whead++;
-					case HITGROUP_CHEST:
-						player_weapons[attacker][weapon_index].wchest++;
-					case HITGROUP_STOMACH:
-						player_weapons[attacker][weapon_index].wstomach++;
-					case HITGROUP_LEFTARM:
-						player_weapons[attacker][weapon_index].wleftarm++;
-					case HITGROUP_RIGHTARM:
-						player_weapons[attacker][weapon_index].wrightarm++;
-					case HITGROUP_LEFTLEG:
-						player_weapons[attacker][weapon_index].wleftleg++;
-					case HITGROUP_RIGHTLEG:
-						player_weapons[attacker][weapon_index].wrightleg++;
-				}
-			}
-
-			if (hitgroup == HITGROUP_HEAD) {
-				player_weapons[attacker][weapon_index].wheadshots++;
-				if (IsClientInGame(attacker)) {
-					log_player_event(attacker, "triggered", "headshot");
-				}
-			}
-		}
-	}
-}
-
-
-public void Event_INSMODEventFired(Event event, const char[] name, bool dontBroadcast)
-{
-	//	"weaponid"	"short"
-	//	"userid"	"short"
-	//	"shots"		"byte"
-
-	int client = GetClientOfUserId(GetEventInt(event, "userid"));
-	char weapon_str[32];
-	GetClientWeapon(client, weapon_str, 32);
-	ReplaceString(weapon_str, 32, "weapon_", "", false);
-
-	int weapon_index = get_weapon_index(insmod_weapon_list, MAX_INSMOD_WEAPON_COUNT, weapon_str);
-	if (weapon_index > -1) {
-		player_weapons[client][weapon_index].wshots++;
-	}
-
-}
-
-
-public void Event_INSMODPlayerSpawn(Event event, const char[] name, bool dontBroadcast)
-{
-	int userid = GetClientOfUserId(GetEventInt(event, "userid"));
-	if (userid > 0) {
-		reset_player_data(userid);
-	}
-}
-
-
-public void Event_INSMODRoundEnd(Event event, const char[] name, bool dontBroadcast)
-{
-	for (int i = 1; (i <= MaxClients); i++) {
-		dump_player_data(i);
-	}
-
-	int team_index = GetEventInt(event, "winner");
-	if (team_index > 0) {
-		log_team_event(team_list[team_index], "Round_Win");
-	}
-}
-
-
-/**
- * Insurgency2 Logger/LogFixer
- * Based on SuperLogs by psychonic (https://forums.alliedmods.net/showthread.php?t=99231?t=99231)
- * Author: FZFalzar of Brutus.SG Modded Servers (http://brutus.sg)
- * Updated and maintained by Jared Ballou (http://jballou.com)
- * Version: 1.2.0
- */
-
-
-
-public void Event_INSMODPlayerPickSquad(Event event, const char[] name, bool dontBroadcast)
-{
-	//	"squad_slot"		"byte"
-	//	"squad"				"byte"
-	//	"userid"			"short"
-	//	"class_template"	"string"
-
-
-	int client = GetClientOfUserId(GetEventInt(event, "userid"));
-
-	if( client == 0) {
-		return;
-	}
-
-	char class_template[64];
-	GetEventString(event, "class_template", class_template, sizeof(class_template));
-	ReplaceString(class_template, sizeof(class_template), "template_", "", false);
-	ReplaceString(class_template, sizeof(class_template), "_training", "", false);
-	ReplaceString(class_template, sizeof(class_template), "_coop", "", false);
-	ReplaceString(class_template, sizeof(class_template), "coop_", "", false);
-	ReplaceString(class_template, sizeof(class_template), "_security", "", false);
-	ReplaceString(class_template, sizeof(class_template), "_insurgent", "", false);
-	ReplaceString(class_template, sizeof(class_template), "_survival", "", false);
-
-	if(!StrEqual(insmod_players[client].last_role, class_template)) {
-		LogToGame("\"%L\" changed role to \"%s\"", client, class_template);
-		strcopy(insmod_players[client].last_role, 64, class_template);
-	}
-}
-
-
-public Action Event_INSMODObjectiveDestroyed(Event event, const char[] name, bool dontBroadcast)
-{
-	//"team"		"byte"
-	//"attacker"	"byte"
-	//"cp"			"short"
-	//"index"		"short"
-	//"type"		"byte"
-	//"weapon"		"string"
-	//"weaponid"	"short"
-	//"assister"	"byte"
-	//"attackerteam" "byte"
-
-	int client = GetClientOfUserId(GetEventInt(event, "attacker"));
-	if ((client > 0) && (client <= MaxClients) && (IsClientInGame(client))) {
-		log_player_event(client, "triggered", "obj_destroyed");
-	}
-	return Plugin_Continue;
-}
-
-
-public Action Event_INSMODControlpointCapped(Event event, const char[] name, bool dontBroadcast)
-{
-	//	"priority"	"short"
-	//	"cp"		"byte"
-	//	"cappers"	"string"
-	//	"cpname"	"string"
-	//	"team"		"byte"
-
-	char cappers[256];
-	GetEventString(event, "cappers", cappers, sizeof(cappers));
-
-	for (int i = 0; i < strlen(cappers); i++) {
-		int client = cappers[i];
-		if ((client > 0) && (client <= MaxClients) && (IsClientInGame(client))) {
-			log_player_event(client, "triggered", "obj_captured");
-		}
-	}
-	return Plugin_Continue;
 }

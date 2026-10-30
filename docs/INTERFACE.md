@@ -20,7 +20,7 @@ The plugin writes standard HL log lines. The ones the collector uses most:
 ```
 
 `weaponstats` lines are written when a player dies, disconnects or the round
-ends (on L4D, L4D2 and Insurgency also every 180 seconds). `weaponstats2` follows
+ends (on L4D and L4D2 also every 180 seconds). `weaponstats2` follows
 when the weapon hit something. TF2 writes `weaponstats` without `weaponstats2`.
 `requested "hideranking"` asks the collector for the player's ranking state
 when the settings menu opens and the state is not known yet; the collector

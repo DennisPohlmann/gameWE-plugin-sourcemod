@@ -44,9 +44,8 @@ the game server, `change-me` your RCON password.
 | Fistful of Frags, No More Room in Hell | `FOF`, `NMRIH` |
 
 Insurgency (2014), Fortress Forever and CSPromod are no longer supported:
-the gameWE collector retired them (no new rankings, existing ones keep
-running). The plugin still recognizes them (`INSMOD`, `FF`, `CSP`) so a
-server that runs one keeps logging as before.
+the gameWE collector retired them, and the plugin no longer detects them.
+A server that still runs an older plugin version keeps logging as before.
 
 The server log shows the result after the start: `gameWE Game Detection: ...`.
 

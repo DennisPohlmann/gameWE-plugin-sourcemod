@@ -52,9 +52,8 @@ Current version: see `VERSION` and [CHANGELOG.md](CHANGELOG.md).
 | Fistful of Frags, No More Room in Hell | `FOF`, `NMRIH` |
 
 Insurgency (2014), Fortress Forever and CSPromod are no longer supported:
-the gameWE collector retired them (no new rankings, existing ones keep
-running). The plugin still recognizes them (`INSMOD`, `FF`, `CSP`) so a
-server that runs one keeps logging as before.
+the gameWE collector retired them, and the plugin no longer detects them.
+A server that still runs an older plugin version keeps logging as before.
 
 The game is detected from the engine version, and from the game name and folder
 for mods. The result is in the log: `gameWE Game Detection: ...`.
@@ -122,6 +121,6 @@ see [LICENSE](LICENSE).
 
 It is based on the gameME plugin, Copyright (C) 2007-2020 TTS Oetzel & Goerz GmbH,
 published under the GPL version 2 or later. It contains the SuperLogs code by
-Nicholas Hastings (psychonic) and Insurgency logging based on work by FZFalzar
-and Jared Ballou, also under the GPL. The gameME changelog up to 5.0.0 is kept in
+Nicholas Hastings (psychonic), also under the GPL (versions up to 0.3.1 also
+contained Insurgency logging based on work by FZFalzar and Jared Ballou). The gameME changelog up to 5.0.0 is kept in
 [docs/gameme-CHANGELOG.txt](docs/gameme-CHANGELOG.txt).
