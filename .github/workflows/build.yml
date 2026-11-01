@@ -1,19 +1,38 @@
 name: build
 
-# Every push to main builds with SourceMod 1.12 and 1.13 and keeps the
-# packages as a workflow artifact. semantic-release then reads the
-# Conventional Commits since the last tag: for a feat, fix or breaking change
-# it bumps the version files, writes CHANGELOG.md, commits that as
-# "chore(release): vX.Y.Z [skip ci]", tags vX.Y.Z and creates the GitHub
-# release; publish then builds that tag with SourceMod 1.12 (stable) and adds
-# the packages to the release. A manual run or a pull request (e.g. from
-# Dependabot) builds without publishing.
+# Every push (any branch) and every pull request builds with SourceMod 1.12
+# and 1.13 and packs the packages exactly as a release does (1.12); they are
+# kept as a workflow artifact for 7 days. Nothing is published then: no tag,
+# no GitHub release, no semantic-release.
+#
+# A release is only made by hand: Actions -> build -> Run workflow on main
+# with "release" ticked, or `gh workflow run build.yml --ref main -f
+# release=true`. The build job runs first; only when it passed does
+# semantic-release read the Conventional Commits since the last tag: for a
+# feat, fix or breaking change it bumps the version files, writes
+# CHANGELOG.md, commits that as "chore(release): vX.Y.Z [skip ci]", tags
+# vX.Y.Z and creates the GitHub release as a draft. publish then builds that
+# tag with SourceMod 1.12 (stable), adds the packages to the draft and only
+# then publishes it, so a release never shows up without its files (a failed
+# publish leaves the draft: re-run the failed job). docs, chore, ci etc. make
+# no release.
 on:
   push:
-    branches: [main]
+    # every branch except Dependabot's: its pull request builds them anyway
+    branches: ['**', '!dependabot/**']
   pull_request:
-    branches: [main]
   workflow_dispatch:
+    inputs:
+      release:
+        description: Make a release (semantic-release, tag, GitHub release with the packages)
+        type: boolean
+        default: false
+
+# A newer push or pull request update cancels the older check run; manual
+# runs (and so releases) are never cancelled.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name != 'workflow_dispatch' }}
 
 permissions:
   contents: read
@@ -52,16 +71,22 @@ jobs:
             dist/*.tar.gz.sha256
             dist/*.zip.sha256
           if-no-files-found: error
+          retention-days: 7
 
   release:
     needs: build
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.event_name == 'workflow_dispatch' && inputs.release
     runs-on: ubuntu-26.04
     permissions:
       contents: write
     outputs:
       version: ${{ steps.release.outputs.version }}
     steps:
+      - name: releases only from main
+        if: github.ref != 'refs/heads/main'
+        run: |
+          echo "::error::a release can only be made from main, not from $GITHUB_REF"
+          exit 1
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0 # all tags and commits since the last release
@@ -109,7 +134,9 @@ jobs:
           echo "SM_INCLUDE=$scripting/include" >> "$GITHUB_ENV"
       - name: make package
         run: make package SPCOMP="$SPCOMP" SM_INCLUDE="$SM_INCLUDE"
-      - name: add the packages to the release
+      - name: add the packages to the draft release and publish it
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release upload "v$RELEASE" dist/*.tar.gz dist/*.zip dist/*.tar.gz.sha256 dist/*.zip.sha256 --repo "$GITHUB_REPOSITORY"
+        run: |
+          gh release upload "v$RELEASE" dist/*.tar.gz dist/*.zip dist/*.tar.gz.sha256 dist/*.zip.sha256 --clobber --repo "$GITHUB_REPOSITORY"
+          gh release edit "v$RELEASE" --draft=false --latest --repo "$GITHUB_REPOSITORY"

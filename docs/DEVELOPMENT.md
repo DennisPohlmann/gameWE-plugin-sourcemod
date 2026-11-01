@@ -17,16 +17,21 @@ include folder, use `SM_INCLUDE=/path/to/include`. The version comes from the gi
 tag (`v1.2.3`) or the `VERSION` file. Warnings are treated as errors.
 
 The GitHub workflow `.github/workflows/build.yml` builds the plugin with
-SourceMod 1.12 and 1.13 for every push to `main` (or when started by hand) and
-keeps the packages as a workflow artifact.
+SourceMod 1.12 and 1.13 for every push (any branch), every pull request and
+when started by hand, and keeps the packages as a workflow artifact for 7
+days; nothing is published without a release run.
 
 ## Releases
 
 Releases are made by [semantic-release](https://semantic-release.gitbook.io/)
-(`.releaserc.json`) in the same workflow; nobody tags by hand. To make a
-release, push commits written as [Conventional Commits](https://www.conventionalcommits.org/)
-to `main`. semantic-release reads the commits since the last tag and decides
-the next version:
+(`.releaserc.json`) in the same workflow; nobody tags by hand. Pushing to
+`main` does not release: a release is started by hand on `main`, in GitHub
+under Actions → build → Run workflow with `release` ticked, or with
+`gh workflow run build.yml --ref main -f release=true`. Run the `release-security-gate` skill
+first (see `CLAUDE.md`). The run builds and tests everything again; only
+when that passed does semantic-release read the
+[Conventional Commits](https://www.conventionalcommits.org/) since the last
+tag and decide the next version:
 
 | Commit | Release |
 |---|---|
@@ -38,6 +43,7 @@ the next version:
 For a release it writes `VERSION`, `GAMEWE_PLUGIN_VERSION` in
 `gamewe.sp`/`gamewe_messages.sp` and `CHANGELOG.md`, commits them as
 `chore(release): vX.Y.Z [skip ci]`, tags `vX.Y.Z` and creates the GitHub
-release. The workflow then builds that tag with SourceMod 1.12 and uploads the
-packages (`.tar.gz`, `.zip`) and their own `.tar.gz.sha256` and `.zip.sha256`
-to the release. Never edit the version files or `CHANGELOG.md` by hand.
+release as a draft. The workflow then builds that tag with SourceMod 1.12,
+uploads the packages (`.tar.gz`, `.zip`) and their own `.tar.gz.sha256` and
+`.zip.sha256` to the release and makes it public. The release stays a draft until all files are in it, so it never shows up
+incomplete; if a job fails, re-run the failed jobs of that run. Never edit the version files or `CHANGELOG.md` by hand.
