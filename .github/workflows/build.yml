@@ -39,9 +39,12 @@ permissions:
 
 # The compilers: fixed builds, so a release is not built with whatever is
 # newest on the download server. A new build is a commit that changes these.
+# The checksums are our own (AlliedModders publishes none).
 env:
   SM_1_12: sourcemod-1.12.0-git7260-linux.tar.gz
+  SM_1_12_SHA256: b01719e6143bc7d5bb63aae8086d031574da6ef838f041ba4b8ab72c8c75b888
   SM_1_13: sourcemod-1.13.0-git7484-linux.tar.gz
+  SM_1_13_SHA256: 2f7309c9dbb17158516bf3daa87af7a473f37d4838f7d0f3738b1b5bf87b455c
 
 jobs:
   build:
@@ -57,8 +60,11 @@ jobs:
       - name: install SourceMod ${{ matrix.sourcemod }}
         run: |
           sm_file=${{ matrix.sourcemod == '1.12' && env.SM_1_12 || env.SM_1_13 }}
+          sm_sha=${{ matrix.sourcemod == '1.12' && env.SM_1_12_SHA256 || env.SM_1_13_SHA256 }}
           mkdir -p "$RUNNER_TEMP/sourcemod"
-          curl -fsSL "https://sm.alliedmods.net/smdrop/${{ matrix.sourcemod }}/$sm_file" | tar -xz -C "$RUNNER_TEMP/sourcemod"
+          curl -fsSL "https://sm.alliedmods.net/smdrop/${{ matrix.sourcemod }}/$sm_file" -o "$RUNNER_TEMP/sm.tar.gz"
+          echo "$sm_sha  $RUNNER_TEMP/sm.tar.gz" | sha256sum -c -
+          tar -xzf "$RUNNER_TEMP/sm.tar.gz" -C "$RUNNER_TEMP/sourcemod"
           scripting="$RUNNER_TEMP/sourcemod/addons/sourcemod/scripting"
           if [ -x "$scripting/spcomp64" ]; then spcomp="$scripting/spcomp64"; else spcomp="$scripting/spcomp"; fi
           echo "using $sm_file ($spcomp)"
@@ -130,9 +136,10 @@ jobs:
           fetch-depth: 0 # tags, for the version
       - name: install SourceMod 1.12
         run: |
-          sm_file=$SM_1_12
           mkdir -p "$RUNNER_TEMP/sourcemod"
-          curl -fsSL "https://sm.alliedmods.net/smdrop/1.12/$sm_file" | tar -xz -C "$RUNNER_TEMP/sourcemod"
+          curl -fsSL "https://sm.alliedmods.net/smdrop/1.12/$SM_1_12" -o "$RUNNER_TEMP/sm.tar.gz"
+          echo "$SM_1_12_SHA256  $RUNNER_TEMP/sm.tar.gz" | sha256sum -c -
+          tar -xzf "$RUNNER_TEMP/sm.tar.gz" -C "$RUNNER_TEMP/sourcemod"
           scripting="$RUNNER_TEMP/sourcemod/addons/sourcemod/scripting"
           if [ -x "$scripting/spcomp64" ]; then spcomp="$scripting/spcomp64"; else spcomp="$scripting/spcomp"; fi
           echo "SPCOMP=$spcomp" >> "$GITHUB_ENV"

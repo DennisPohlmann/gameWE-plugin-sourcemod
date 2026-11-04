@@ -17,8 +17,8 @@ include folder, use `SM_INCLUDE=/path/to/include`. The version comes from the gi
 tag (`v1.2.3`) or the `VERSION` file. Warnings are treated as errors.
 
 The GitHub workflow `.github/workflows/build.yml` builds the plugin with
-SourceMod 1.12 and 1.13 (the builds fixed as `SM_1_12` and `SM_1_13` in the
-workflow; a newer build is a commit that changes them) for every push (any
+SourceMod 1.12 and 1.13 (the builds fixed as `SM_1_12` and `SM_1_13` with their
+checksums in the workflow; a newer build is a commit that changes them) for every push (any
 branch), every pull request and when started by hand, and keeps the packages as a workflow artifact for 7
 days; nothing is published without a release run.
 
