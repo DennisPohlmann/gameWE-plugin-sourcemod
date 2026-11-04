@@ -3755,10 +3755,30 @@ public Action TF2_CalcIsAttackCritical(int attacker, int weapon, char[] weaponna
 
 void log_player_settings(int client, char verb[32], const char[] settings_name, const char[] settings_value)
 {
+	// A player chooses cvar replies and clan tags: no quote or line break may
+	// add anything to the log line the collector trusts.
+	char value[192];
+	strcopy(value, sizeof(value), settings_value);
+	for (int i = 0; value[i] != '\0'; i++) {
+		if ((value[i] == '"') || ((value[i] > 0) && (value[i] < ' ')) || (value[i] == 127)) {
+			value[i] = '_';
+		}
+	}
 	if (client > 0) {
-		LogToGame("\"%L\" %s \"%s\" (value \"%s\")", client, verb, settings_name, settings_value);
+		LogToGame("\"%L\" %s \"%s\" (value \"%s\")", client, verb, settings_name, value);
 	} else {
-		LogToGame("\"%s\" %s \"%s\" (value \"%s\")", "Server", verb, settings_name, settings_value);
+		LogToGame("\"%s\" %s \"%s\" (value \"%s\")", "Server", verb, settings_name, value);
+	}
+}
+
+
+// An earlier command that had nothing to send leaves its recipients behind:
+// they must not get the next player's message.
+void clear_message_recipients()
+{
+	int recipient;
+	while (IsStackEmpty(gamewe_plugin.message_recipients) == false) {
+		PopStackCell(gamewe_plugin.message_recipients, recipient);
 	}
 }
 
@@ -4627,6 +4647,7 @@ public Action gamewe_psay(int args)
 
 	char client_id[192];
 	GetCmdArg(1, client_id, 192);
+	clear_message_recipients();
 	if (StrContains(client_id, ",") > -1) {
 		char[][] MessageRecipients = new char[MaxClients][16];
 		int recipient_count = ExplodeString(client_id, ",", MessageRecipients, MaxClients, 16);
@@ -4845,6 +4866,7 @@ public Action gamewe_hint(int args)
 
 	char client_id[512];
 	GetCmdArg(1, client_id, 512);
+	clear_message_recipients();
 	if (StrContains(client_id, ",") > -1) {
 		char[][] MessageRecipients = new char[MaxClients][16];
 		int recipient_count = ExplodeString(client_id, ",", MessageRecipients, MaxClients, 16);
@@ -4885,6 +4907,7 @@ public Action gamewe_khint(int args)
 
 	char client_id[512];
 	GetCmdArg(1, client_id, 512);
+	clear_message_recipients();
 	if (StrContains(client_id, ",") > -1) {
 		char[][] MessageRecipients = new char[MaxClients][16];
 		int recipient_count = ExplodeString(client_id, ",", MessageRecipients, MaxClients, 16);
@@ -4933,6 +4956,7 @@ public Action gamewe_browse(int args)
 
 	char client_id[512];
 	GetCmdArg(1, client_id, 512);
+	clear_message_recipients();
 	if (StrContains(client_id, ",") > -1) {
 		char[][] MessageRecipients = new char[MaxClients][16];
 		int recipient_count = ExplodeString(client_id, ",", MessageRecipients, MaxClients, 16);
@@ -5003,6 +5027,7 @@ public Action gamewe_redirect(int args)
 
 	char client_id[512];
 	GetCmdArg(2, client_id, 512);
+	clear_message_recipients();
 	if (StrContains(client_id, ",") > -1) {
 		char[][] MessageRecipients = new char[MaxClients][16];
 		int recipient_count = ExplodeString(client_id, ",", MessageRecipients, MaxClients, 16);
@@ -5050,7 +5075,7 @@ public Action gamewe_redirect(int args)
 public Action gamewe_player_action(int args)
 {
 	if (args < 2) {
-		PrintToServer("Usage: gamewe_player_action <client><action> - trigger player action to be handled from gameWE");
+		PrintToServer("Usage: gamewe_player_action <userid><action> - trigger player action to be handled from gameWE");
 		return Plugin_Handled;
 	}
 
@@ -5060,8 +5085,8 @@ public Action gamewe_player_action(int args)
 	char player_action[192];
 	GetCmdArg(2, player_action, 192);
 
-	int client = StringToInt(client_id);
-	if (client > 0) {
+	int client = GetClientOfUserId(StringToInt(client_id));
+	if ((client > 0) && (IsClientInGame(client))) {
 		log_player_event(client, "triggered", player_action);
 	}
 
