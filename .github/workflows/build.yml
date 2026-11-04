@@ -37,6 +37,12 @@ concurrency:
 permissions:
   contents: read
 
+# The compilers: fixed builds, so a release is not built with whatever is
+# newest on the download server. A new build is a commit that changes these.
+env:
+  SM_1_12: sourcemod-1.12.0-git7260-linux.tar.gz
+  SM_1_13: sourcemod-1.13.0-git7484-linux.tar.gz
+
 jobs:
   build:
     runs-on: ubuntu-26.04
@@ -45,13 +51,12 @@ jobs:
       matrix:
         sourcemod: ['1.12', '1.13']
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           fetch-depth: 0 # tags, for the version
       - name: install SourceMod ${{ matrix.sourcemod }}
         run: |
-          # latest build of the branch, e.g. sourcemod-1.12.0-git7210-linux.tar.gz
-          sm_file=$(curl -fsSL "https://sm.alliedmods.net/smdrop/${{ matrix.sourcemod }}/sourcemod-latest-linux")
+          sm_file=${{ matrix.sourcemod == '1.12' && env.SM_1_12 || env.SM_1_13 }}
           mkdir -p "$RUNNER_TEMP/sourcemod"
           curl -fsSL "https://sm.alliedmods.net/smdrop/${{ matrix.sourcemod }}/$sm_file" | tar -xz -C "$RUNNER_TEMP/sourcemod"
           scripting="$RUNNER_TEMP/sourcemod/addons/sourcemod/scripting"
@@ -61,7 +66,7 @@ jobs:
           echo "SM_INCLUDE=$scripting/include" >> "$GITHUB_ENV"
       - name: make package
         run: make package SPCOMP="$SPCOMP" SM_INCLUDE="$SM_INCLUDE"
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         if: matrix.sourcemod == '1.12'
         with:
           name: gamewe-sourcemod
@@ -87,10 +92,10 @@ jobs:
         run: |
           echo "::error::a release can only be made from main, not from $GITHUB_REF"
           exit 1
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           fetch-depth: 0 # all tags and commits since the last release
-      - uses: actions/setup-node@v7
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version: 24
       - name: semantic-release
@@ -119,13 +124,13 @@ jobs:
     env:
       RELEASE: ${{ needs.release.outputs.version }}
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           ref: v${{ needs.release.outputs.version }}
           fetch-depth: 0 # tags, for the version
       - name: install SourceMod 1.12
         run: |
-          sm_file=$(curl -fsSL "https://sm.alliedmods.net/smdrop/1.12/sourcemod-latest-linux")
+          sm_file=$SM_1_12
           mkdir -p "$RUNNER_TEMP/sourcemod"
           curl -fsSL "https://sm.alliedmods.net/smdrop/1.12/$sm_file" | tar -xz -C "$RUNNER_TEMP/sourcemod"
           scripting="$RUNNER_TEMP/sourcemod/addons/sourcemod/scripting"
