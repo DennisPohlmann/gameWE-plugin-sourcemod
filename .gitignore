@@ -12,3 +12,5 @@
 *.swp
 .DS_Store
 /tools/release/node_modules/
+.claude/
+CLAUDE.md
