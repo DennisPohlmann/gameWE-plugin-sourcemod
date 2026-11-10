@@ -41,6 +41,11 @@ tag and decide the next version:
 | `feat!: ...`, `fix!: ...` or a `BREAKING CHANGE:` footer | major (0.1.0 → 1.0.0) |
 | `docs`, `chore`, `ci`, `build`, `test`, `refactor`, `style` | no release |
 
+A run with `release` ticked that makes no release (no such commit since the
+last tag, or `main` moved on while the run was checking) fails at the step
+`stop if nothing was released`; start it again once there is something to
+release.
+
 For a release it writes `VERSION`, `GAMEWE_PLUGIN_VERSION` in
 `gamewe.sp`/`gamewe_messages.sp` and `CHANGELOG.md`, commits them as
 `chore(release): vX.Y.Z [skip ci]`, tags `vX.Y.Z` and creates the GitHub
