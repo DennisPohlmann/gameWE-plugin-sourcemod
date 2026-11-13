@@ -43,8 +43,8 @@ permissions:
 env:
   SM_1_12: sourcemod-1.12.0-git7260-linux.tar.gz
   SM_1_12_SHA256: b01719e6143bc7d5bb63aae8086d031574da6ef838f041ba4b8ab72c8c75b888
-  SM_1_13: sourcemod-1.13.0-git7491-linux.tar.gz
-  SM_1_13_SHA256: ef384155b5b58e36f06f9764ac4aa442eccbf7b053294f676bd0413ae91c6467
+  SM_1_13: sourcemod-1.13.0-git7492-linux.tar.gz
+  SM_1_13_SHA256: ba520dc30e580f2ee697fb25d94412a92d516abd685c62b9a04ff140c58ef1b5
 
 jobs:
   build:
