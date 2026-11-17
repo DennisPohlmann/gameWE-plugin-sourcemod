@@ -466,6 +466,11 @@ enum struct zps_player {
 zps_player zps_players[MAXPLAYERS + 1];
 
 
+// DoD:S, Fistful of Frags, No More Room in Hell: their player_death has no
+// headshot field, so the hitgroup of the last bullet decides (as HL2MP, ZPS)
+int last_hitgroup[MAXPLAYERS + 1];
+
+
 /**
  *  Team Fortress 2
  */
@@ -896,6 +901,10 @@ public void OnAllPluginsLoaded()
 						SDKHook(i, SDKHook_FireBulletsPost,  OnHL2MPFireBullets);
 						SDKHook(i, SDKHook_TraceAttackPost,  OnHL2MPTraceAttack);
 						SDKHook(i, SDKHook_OnTakeDamagePost, OnHL2MPTakeDamage);
+					}
+					case MOD_DODS, MOD_FOF, MOD_NMRIH: {
+						SDKHook(i, SDKHook_TraceAttackPost,  OnHitgroupTraceAttack);
+						SDKHook(i, SDKHook_OnTakeDamagePost, OnHitgroupTakeDamage);
 					}
 					case MOD_ZPS: {
 						SDKHook(i, SDKHook_FireBulletsPost,  OnZPSFireBullets);
@@ -1561,6 +1570,7 @@ public void OnClientPutInServer(int client)
 {
 	if (client > 0) {
 		gamewe_last_trigger[client] = 0.0;
+		last_hitgroup[client] = 0;
 		for (int i = 0; i < AUTO_EVENTS; i++) {
 			gamewe_last_auto[client][i] = 0.0;
 		}
@@ -1570,6 +1580,10 @@ public void OnClientPutInServer(int client)
 					SDKHook(client, SDKHook_FireBulletsPost,  OnHL2MPFireBullets);
 					SDKHook(client, SDKHook_TraceAttackPost,  OnHL2MPTraceAttack);
 					SDKHook(client, SDKHook_OnTakeDamagePost, OnHL2MPTakeDamage);
+				}
+				case MOD_DODS, MOD_FOF, MOD_NMRIH: {
+					SDKHook(client, SDKHook_TraceAttackPost,  OnHitgroupTraceAttack);
+					SDKHook(client, SDKHook_OnTakeDamagePost, OnHitgroupTakeDamage);
 				}
 				case MOD_ZPS: {
 					SDKHook(client, SDKHook_FireBulletsPost,  OnZPSFireBullets);
@@ -2777,6 +2791,9 @@ public void Event_DODSPlayerDeath(Event event, const char[] name, bool dontBroad
 			if (weapon_index > -1) {
 				player_weapons[attacker][weapon_index].wkills++;
 				player_weapons[victim][weapon_index].wdeaths++;
+				if (is_hitgroup_headshot(attacker, victim)) {
+					player_weapons[attacker][weapon_index].wheadshots++;
+				}
 
 				if (GetClientTeam(attacker) == GetClientTeam(victim)) {
 					player_weapons[attacker][weapon_index].wteamkills++;
@@ -5288,6 +5305,12 @@ public Action gameWE_Event_PlyDeath(Event event, const char[] name, bool dontBro
 			}
 		}
 
+		if ((gamewe_plugin.mod_id == MOD_DODS) || (gamewe_plugin.mod_id == MOD_FOF) || (gamewe_plugin.mod_id == MOD_NMRIH)) {
+			if (is_hitgroup_headshot(attacker, victim)) {
+				log_player_event(attacker, "triggered", "headshot");
+			}
+		}
+
 		if (gamewe_plugin.mod_id == MOD_TF2) {
 			int customkill = GetEventInt(event, "customkill");
 			int weapon = GetEventInt(event, "weaponid");
@@ -7002,6 +7025,37 @@ public void OnZPSTakeDamage(int victim, int attacker, int inflictor, float damag
 		}
 		zps_players[victim].next_hitgroup_zps = 0;
 	}
+}
+
+
+// TraceAttack comes before the damage, player_death fires within it and
+// OnTakeDamagePost after it: a grenade kill does not reuse an older hitgroup.
+public void OnHitgroupTraceAttack(int victim, int attacker, int inflictor, float damage, int damagetype, int ammotype, int hitbox, int hitgroup)
+{
+	if ((victim > 0) && (victim <= MaxClients)) {
+		last_hitgroup[victim] = hitgroup;
+	}
+}
+
+
+public void OnHitgroupTakeDamage(int victim, int attacker, int inflictor, float damage, int damagetype)
+{
+	if ((victim > 0) && (victim <= MaxClients)) {
+		last_hitgroup[victim] = 0;
+	}
+}
+
+
+// a kill by a shot in the head; not a suicide and not a teamkill (team 0 and
+// 1 are unassigned and spectator, as the collector's neutral teams)
+bool is_hitgroup_headshot(int attacker, int victim)
+{
+	if ((victim < 1) || (victim > MaxClients) || (attacker < 1) || (attacker > MaxClients) || (attacker == victim) ||
+	    (last_hitgroup[victim] != HITGROUP_HEAD) || (!IsClientInGame(attacker)) || (!IsClientInGame(victim))) {
+		return false;
+	}
+	int team = GetClientTeam(attacker);
+	return (team <= 1) || (team != GetClientTeam(victim));
 }
 
 
